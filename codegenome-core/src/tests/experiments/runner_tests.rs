@@ -52,6 +52,7 @@ fn tsv_logging_roundtrip() {
         iteration: 1,
         params: std::collections::HashMap::new(),
         fitness: 0.876543,
+        stability: 0.95,
         status: ExperimentStatus::Pass,
         cycle_time_ms: 42,
         description: "test run".into(),

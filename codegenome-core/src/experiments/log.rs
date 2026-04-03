@@ -11,6 +11,7 @@ pub struct ExperimentResult {
     pub iteration: u64,
     pub params: HashMap<String, f64>,
     pub fitness: f64,
+    pub stability: f64,
     pub status: ExperimentStatus,
     pub cycle_time_ms: u64,
     pub description: String,
@@ -31,7 +32,7 @@ pub fn log_result(
         .map_err(|e| e.to_string())?;
 
     if needs_header {
-        writeln!(file, "iteration\tfitness\tcycle_ms\tstatus\tdescription")
+        writeln!(file, "iteration\tfitness\tstability\tcycle_ms\tstatus\tdescription")
             .map_err(|e| e.to_string())?;
     }
 
@@ -43,9 +44,10 @@ pub fn log_result(
 
     writeln!(
         file,
-        "{}\t{:.6}\t{}\t{}\t{}",
+        "{}\t{:.6}\t{:.6}\t{}\t{}\t{}",
         result.iteration,
         result.fitness,
+        result.stability,
         result.cycle_time_ms,
         status_str,
         result.description,
@@ -75,18 +77,19 @@ pub fn read_log(path: &Path) -> Result<Vec<ExperimentResult>, String> {
 
 fn parse_tsv_line(line: &str) -> Option<ExperimentResult> {
     let parts: Vec<&str> = line.split('\t').collect();
-    if parts.len() < 5 { return None; }
+    if parts.len() < 6 { return None; }
 
     Some(ExperimentResult {
         iteration: parts[0].parse().ok()?,
         fitness: parts[1].parse().ok()?,
-        cycle_time_ms: parts[2].parse().ok()?,
-        status: match parts[3] {
+        stability: parts[2].parse().ok()?,
+        cycle_time_ms: parts[3].parse().ok()?,
+        status: match parts[4] {
             "pass" => ExperimentStatus::Pass,
             "fail" => ExperimentStatus::Fail,
             _ => ExperimentStatus::Inconclusive,
         },
-        description: parts[4].to_string(),
+        description: parts[5].to_string(),
         params: HashMap::new(),
     })
 }
