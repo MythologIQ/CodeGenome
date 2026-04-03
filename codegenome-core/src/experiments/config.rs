@@ -1,0 +1,53 @@
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+use crate::graph::overlay::OverlayKind;
+
+/// Immutable experiment infrastructure.
+/// Like autoresearch's prepare.py — never modified.
+pub struct ExperimentInfra {
+    pub source_dir: PathBuf,
+    pub overlays: Vec<OverlayKind>,
+    pub fitness_fn: FitnessFunction,
+}
+
+/// Mutable experiment surface.
+/// Like autoresearch's train.py — the thing that changes.
+#[derive(Clone, Debug, Default)]
+pub struct ExperimentParams {
+    pub values: HashMap<String, f64>,
+}
+
+/// Fitness function selection.
+#[derive(Clone, Debug)]
+pub enum FitnessFunction {
+    /// Does impact prediction match actual breakage?
+    ImpactAccuracy,
+    /// How deep does signal penetrate?
+    PropagationDepth,
+    /// Parse + propagate latency in ms.
+    CycleTime,
+    /// Edges per node ratio.
+    GraphDensity,
+    /// Named custom function.
+    Custom(String),
+}
+
+/// Status of an experiment run.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ExperimentStatus {
+    Pass,
+    Fail,
+    Inconclusive,
+}
+
+impl ExperimentParams {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with(mut self, key: &str, value: f64) -> Self {
+        self.values.insert(key.into(), value);
+        self
+    }
+}

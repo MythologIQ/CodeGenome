@@ -7,7 +7,7 @@ use crate::overlay::syntax::parse_rust_files;
 use crate::store::backend::StoreBackend;
 use crate::store::ondisk::OnDiskStore;
 
-fn load_own_source() -> Vec<(PathBuf, Vec<u8>)> {
+pub(crate) fn load_own_source() -> Vec<(PathBuf, Vec<u8>)> {
     let src_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src");
     collect_rs_files(&src_dir)
 }

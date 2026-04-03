@@ -35,9 +35,12 @@ pub enum DiffStatus {
     Renamed,
 }
 
-/// Result of detect_changes: affected node and edge addresses.
+/// Result of detect_changes: affected nodes, edges, and
+/// propagated impact/staleness signals.
 #[derive(Clone, Debug, Default)]
 pub struct ChangeSet {
     pub changed_nodes: Vec<UorAddress>,
     pub affected_edges: Vec<UorAddress>,
+    pub impact: std::collections::HashMap<UorAddress, f64>,
+    pub staleness: std::collections::HashMap<UorAddress, f64>,
 }
