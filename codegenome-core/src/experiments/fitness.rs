@@ -42,11 +42,12 @@ pub fn impact_accuracy(
         let impact = depth_propagate(
             root, overlays, atten, threshold,
         );
-        let sibling_impact_sum: f64 = siblings
+        let sibling_hits: f64 = siblings
             .iter()
             .filter_map(|addr| impact.get(addr))
+            .map(|&score| score.clamp(0.0, 1.0))
             .sum();
-        total_score += sibling_impact_sum / siblings.len() as f64;
+        total_score += sibling_hits / siblings.len() as f64;
         total_tests += 1;
     }
 

@@ -102,9 +102,16 @@ fn perturb(
 ) -> ExperimentParams {
     let mut rng = rand::rng();
     let mut new = params.clone();
-    for value in new.values.values_mut() {
+    for (key, value) in new.values.iter_mut() {
         let delta: f64 = rng.random_range(-scale..=scale);
         *value += delta;
+        // Bound parameters to sensible ranges
+        match key.as_str() {
+            "confidence_threshold" => *value = value.clamp(0.01, 0.99),
+            "attenuation_factor" => *value = value.clamp(0.1, 2.0),
+            "max_depth" => *value = value.clamp(1.0, 20.0),
+            _ => {}
+        }
     }
     new
 }
