@@ -1,0 +1,3 @@
+[workspace]
+members = ["codegenome-core"]
+resolver = "2"

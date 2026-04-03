@@ -1,0 +1,35 @@
+# AI GOVERNANCE
+.agent/
+.claude/
+.failsafe/
+.qorelogic/
+CLAUDE.md
+GEMINI.md
+COPILOT.md
+CURSOR.md
+
+# Planning documents
+plan-*.md
+docs/
+
+# IDE local settings
+.vscode/
+.idea/
+.cursor/
+.windsurf/
+
+# Build artifacts
+target/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
+*.pem
+*.key
+
+# OS
+Thumbs.db
+.DS_Store
