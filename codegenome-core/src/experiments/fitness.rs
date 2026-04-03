@@ -1,100 +1,196 @@
 use std::path::Path;
 
-use crate::diff::{DiffStatus, OwnedDiff, OwnedDiffFile, OwnedHunk};
-use crate::diff::mapper::detect_changes;
 use crate::experiments::config::ExperimentParams;
+use crate::graph::edge::Relation;
 use crate::graph::node::NodeKind;
 use crate::graph::overlay::Overlay;
+use crate::identity::UorAddress;
 use crate::overlay::syntax::parse_rust_files;
-use crate::signal::impact::propagate_impact;
 
-/// Impact prediction accuracy: fabricate diffs for known
-/// symbols, run detect_changes, check if the changed symbol
-/// appears in the impact map.
-pub fn impact_accuracy(source_dir: &Path) -> f64 {
+/// Impact prediction accuracy: for each sampled symbol,
+/// propagate from it with attenuation and check what
+/// fraction of its siblings are reached above threshold.
+pub fn impact_accuracy(
+    source_dir: &Path,
+    params: &ExperimentParams,
+) -> f64 {
     let files = collect_rs_files(source_dir);
     if files.is_empty() {
         return 0.0;
     }
     let overlay = parse_rust_files(&files);
-    let symbols: Vec<_> = overlay
-        .nodes()
-        .iter()
-        .filter(|n| n.kind == NodeKind::Symbol && n.span.is_some())
-        .collect();
-
+    let symbols = symbols_with_spans(&overlay);
     if symbols.is_empty() {
         return 0.0;
     }
 
+    let threshold = param_or(params, "confidence_threshold", 0.5);
+    let atten = param_or(params, "attenuation_factor", 0.8);
+    let overlays: &[&dyn Overlay] = &[&overlay];
     let sample_size = symbols.len().min(10);
-    let mut correct = 0u32;
+    let mut total_score = 0.0;
+    let mut total_tests = 0u32;
 
     for symbol in symbols.iter().take(sample_size) {
-        let span = symbol.span.unwrap();
-        let diff = fabricate_diff(span.start_line);
-        let changeset = detect_changes(
-            &diff,
-            &[&overlay as &dyn Overlay],
-        );
-        if changeset.impact.contains_key(&symbol.address) {
-            correct += 1;
+        let siblings = find_siblings(&overlay, symbol.address);
+        if siblings.is_empty() {
+            continue;
         }
+        // Find parent file to propagate from
+        let parent = find_parent(&overlay, symbol.address);
+        let root = parent.unwrap_or(symbol.address);
+        let impact = depth_propagate(
+            root, overlays, atten, threshold,
+        );
+        let hits = siblings
+            .iter()
+            .filter(|addr| impact.contains_key(addr))
+            .count();
+        total_score += hits as f64 / siblings.len() as f64;
+        total_tests += 1;
     }
 
-    correct as f64 / sample_size as f64
+    if total_tests == 0 {
+        return 0.0;
+    }
+    total_score / total_tests as f64
 }
 
-/// Stability: measure how much impact scores change when
-/// params are slightly perturbed.
+/// Stability: run depth-attenuated propagation with two
+/// different attenuation factors and measure how many nodes'
+/// inclusion changes. Uses BFS depth to apply attenuation.
 pub fn stability(
     source_dir: &Path,
-    _params: &ExperimentParams,
+    params: &ExperimentParams,
 ) -> f64 {
     let files = collect_rs_files(source_dir);
     if files.is_empty() {
         return 1.0;
     }
     let overlay = parse_rust_files(&files);
-    let symbols: Vec<_> = overlay
+    // Start from a File node so Contains edges propagate
+    let file_nodes: Vec<_> = overlay
         .nodes()
         .iter()
-        .filter(|n| n.kind == NodeKind::Symbol)
+        .filter(|n| n.kind == NodeKind::File)
         .collect();
-
-    if symbols.is_empty() {
+    if file_nodes.is_empty() {
         return 1.0;
     }
 
-    let root = symbols[0].address;
-    let impact_a = propagate_impact(&[root], &[&overlay as &dyn Overlay]);
-    let impact_b = propagate_impact(&[root], &[&overlay as &dyn Overlay]);
+    let atten = param_or(params, "attenuation_factor", 0.8);
+    let threshold = param_or(params, "confidence_threshold", 0.5);
+    let overlays: &[&dyn Overlay] = &[&overlay];
+    let root = file_nodes[0].address;
 
-    let total = impact_a.len().max(1) as f64;
-    let mut changed = 0u32;
-    for (addr, score_a) in &impact_a {
-        let score_b = impact_b.get(addr).unwrap_or(&0.0);
-        if (score_a - score_b).abs() > 0.001 {
-            changed += 1;
-        }
-    }
+    let set_a = depth_propagate(root, overlays, atten, threshold);
+    let perturbed = atten * 0.9;
+    let set_b = depth_propagate(root, overlays, perturbed, threshold);
 
-    1.0 - (changed as f64 / total)
+    let all_keys: std::collections::HashSet<_> = set_a
+        .keys()
+        .chain(set_b.keys())
+        .collect();
+    let total = all_keys.len().max(1) as f64;
+    let sum_diff: f64 = all_keys
+        .iter()
+        .map(|addr| {
+            let a = set_a.get(addr).unwrap_or(&0.0);
+            let b = set_b.get(addr).unwrap_or(&0.0);
+            (a - b).abs()
+        })
+        .sum();
+    let mean_diff = sum_diff / total;
+
+    1.0 - mean_diff
 }
 
-fn fabricate_diff(line: u32) -> OwnedDiff {
-    OwnedDiff {
-        files: vec![OwnedDiffFile {
-            path: "synthetic.rs".into(),
-            status: DiffStatus::Modified,
-            hunks: vec![OwnedHunk {
-                new_start: line,
-                new_lines: 3,
-                old_start: line,
-                old_lines: 3,
-            }],
-        }],
+/// BFS propagation that applies attenuation per hop.
+fn depth_propagate(
+    root: UorAddress,
+    overlays: &[&dyn Overlay],
+    attenuation: f64,
+    threshold: f64,
+) -> std::collections::HashMap<UorAddress, f64> {
+    use std::collections::{HashMap, VecDeque};
+    let mut scores: HashMap<UorAddress, f64> = HashMap::new();
+    scores.insert(root, 1.0);
+    let mut queue = VecDeque::new();
+    queue.push_back((root, 1.0));
+
+    while let Some((node, score)) = queue.pop_front() {
+        for overlay in overlays {
+            for edge in overlay.edges() {
+                if edge.source != node {
+                    continue;
+                }
+                let child_score =
+                    score * edge.confidence * attenuation;
+                if child_score < threshold {
+                    continue;
+                }
+                let entry = scores.entry(edge.target).or_insert(0.0);
+                if child_score > *entry {
+                    *entry = child_score;
+                    queue.push_back((edge.target, child_score));
+                }
+            }
+        }
     }
+    scores
+}
+
+fn find_parent(
+    overlay: &dyn Overlay,
+    addr: UorAddress,
+) -> Option<UorAddress> {
+    overlay
+        .edges()
+        .iter()
+        .find(|e| {
+            e.target == addr && e.relation == Relation::Contains
+        })
+        .map(|e| e.source)
+}
+
+/// Find sibling symbols: nodes sharing a Contains parent
+/// with `addr` in the same file.
+fn find_siblings(
+    overlay: &dyn Overlay,
+    addr: UorAddress,
+) -> Vec<UorAddress> {
+    let parents: Vec<UorAddress> = overlay
+        .edges()
+        .iter()
+        .filter(|e| {
+            e.target == addr && e.relation == Relation::Contains
+        })
+        .map(|e| e.source)
+        .collect();
+
+    let mut siblings = Vec::new();
+    for edge in overlay.edges() {
+        if edge.relation == Relation::Contains
+            && parents.contains(&edge.source)
+            && edge.target != addr
+        {
+            siblings.push(edge.target);
+        }
+    }
+    siblings
+}
+
+fn symbols_with_spans(
+    overlay: &dyn Overlay,
+) -> Vec<crate::graph::node::Node> {
+    overlay
+        .nodes()
+        .iter()
+        .filter(|n| {
+            n.kind == NodeKind::Symbol && n.span.is_some()
+        })
+        .cloned()
+        .collect()
 }
 
 fn collect_rs_files(
@@ -115,4 +211,12 @@ fn collect_rs_files(
         }
     }
     files
+}
+
+fn param_or(
+    params: &ExperimentParams,
+    key: &str,
+    default: f64,
+) -> f64 {
+    params.values.get(key).copied().unwrap_or(default)
 }

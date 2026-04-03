@@ -13,7 +13,7 @@ pub fn run_experiment(
 ) -> ExperimentResult {
     let start = std::time::Instant::now();
 
-    let accuracy = fitness::impact_accuracy(&infra.source_dir);
+    let accuracy = fitness::impact_accuracy(&infra.source_dir, params);
     let stab = fitness::stability(&infra.source_dir, params);
 
     let elapsed = start.elapsed();
@@ -30,21 +30,17 @@ pub fn run_experiment(
 }
 
 /// Hill-climbing: perturb params, run, keep if better.
+/// Returns the perturbed result so we don't re-run.
 pub fn hill_climb_step(
     infra: &ExperimentInfra,
     current: &ExperimentParams,
     current_fitness: f64,
     perturbation_scale: f64,
-) -> (ExperimentParams, f64, bool) {
+) -> (ExperimentParams, ExperimentResult, bool) {
     let perturbed = perturb(current, perturbation_scale);
     let result = run_experiment(infra, &perturbed);
-
     let kept = result.fitness > current_fitness;
-    if kept {
-        (perturbed, result.fitness, true)
-    } else {
-        (current.clone(), current_fitness, false)
-    }
+    (perturbed, result, kept)
 }
 
 /// Run experiments continuously until max_iterations.
@@ -68,15 +64,14 @@ pub fn run_continuous(
 
     let limit = max_iterations.unwrap_or(u64::MAX);
     for i in 1..=limit {
-        let (new_params, new_fitness, kept) =
+        let (perturbed, mut step_result, kept) =
             hill_climb_step(infra, &params, best_fitness, 0.1);
 
-        let mut step_result = run_experiment(infra, &new_params);
         step_result.iteration = i;
         step_result.description = if kept {
-            format!("keep: {}", format_params(&new_params))
+            format!("keep: {}", format_params(&perturbed))
         } else {
-            format!("discard: {}", format_params(&new_params))
+            format!("discard: {}", format_params(&perturbed))
         };
         let _ = log_result(log_path, &step_result);
 
@@ -89,8 +84,8 @@ pub fn run_continuous(
         );
 
         if kept {
-            params = new_params;
-            best_fitness = new_fitness;
+            params = perturbed;
+            best_fitness = step_result.fitness;
         }
     }
 }

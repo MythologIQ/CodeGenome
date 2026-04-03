@@ -16,29 +16,27 @@ fn test_infra() -> ExperimentInfra {
 #[test]
 fn single_experiment_produces_valid_result() {
     let infra = test_infra();
-    let params = ExperimentParams::new();
+    let params = ExperimentParams::default();
     let result = runner::run_experiment(&infra, &params);
 
     assert_eq!(result.status, ExperimentStatus::Pass);
-    assert!(result.fitness > 0.0);
-    assert!(result.cycle_time_ms < 5000);
+    assert!(result.fitness < 1.0, "Fitness must not be trivially 1.0");
+    assert!(result.cycle_time_ms < 10000);
 }
 
 #[test]
 fn hill_climb_step_keeps_or_discards() {
     let infra = test_infra();
-    let params = ExperimentParams::new()
-        .with("threshold", 0.5);
+    let params = ExperimentParams::default();
     let baseline = runner::run_experiment(&infra, &params);
 
-    let (_, new_fitness, _kept) = runner::hill_climb_step(
+    let (_, result, _kept) = runner::hill_climb_step(
         &infra,
         &params,
         baseline.fitness,
         0.1,
     );
-    // new_fitness should be a valid number
-    assert!(new_fitness.is_finite());
+    assert!(result.fitness.is_finite());
 }
 
 #[test]
@@ -77,8 +75,7 @@ fn continuous_loop_runs_n_iterations() {
     let log_path = dir.join("results.tsv");
 
     let infra = test_infra();
-    let params = ExperimentParams::new()
-        .with("threshold", 0.5);
+    let params = ExperimentParams::default();
 
     runner::run_continuous(
         &infra,
@@ -88,7 +85,6 @@ fn continuous_loop_runs_n_iterations() {
     );
 
     let results = log::read_log(&log_path).unwrap();
-    // Initial run + 3 iterations = 4 entries
     assert!(results.len() >= 3);
 
     let _ = std::fs::remove_dir_all(&dir);

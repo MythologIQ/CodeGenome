@@ -13,9 +13,19 @@ pub struct ExperimentInfra {
 
 /// Mutable experiment surface.
 /// Like autoresearch's train.py — the thing that changes.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct ExperimentParams {
     pub values: HashMap<String, f64>,
+}
+
+impl Default for ExperimentParams {
+    fn default() -> Self {
+        let mut values = HashMap::new();
+        values.insert("confidence_threshold".into(), 0.75);
+        values.insert("max_depth".into(), 5.0);
+        values.insert("attenuation_factor".into(), 0.85);
+        Self { values }
+    }
 }
 
 /// Fitness function selection.
