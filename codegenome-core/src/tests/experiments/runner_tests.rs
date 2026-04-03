@@ -34,6 +34,7 @@ fn hill_climb_step_keeps_or_discards() {
         &infra,
         &params,
         baseline.fitness,
+        baseline.stability,
         0.1,
     );
     assert!(result.fitness.is_finite());

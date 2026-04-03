@@ -35,11 +35,15 @@ pub fn hill_climb_step(
     infra: &ExperimentInfra,
     current: &ExperimentParams,
     current_fitness: f64,
+    current_stability: f64,
     perturbation_scale: f64,
 ) -> (ExperimentParams, ExperimentResult, bool) {
     let perturbed = perturb(current, perturbation_scale);
     let result = run_experiment(infra, &perturbed);
-    let kept = result.fitness > current_fitness;
+    let dominated = result.fitness > current_fitness;
+    let pareto = (result.fitness - current_fitness).abs() < 0.0001
+        && result.stability > current_stability;
+    let kept = dominated || pareto;
     (perturbed, result, kept)
 }
 
@@ -56,6 +60,7 @@ pub fn run_continuous(
     result.description = "baseline".into();
     let _ = log_result(log_path, &result);
     let mut best_fitness = result.fitness;
+    let mut best_stability = result.stability;
 
     eprintln!(
         "[0] baseline: fitness={:.4} stability={:.4} ({} ms)",
@@ -65,7 +70,7 @@ pub fn run_continuous(
     let limit = max_iterations.unwrap_or(u64::MAX);
     for i in 1..=limit {
         let (perturbed, mut step_result, kept) =
-            hill_climb_step(infra, &params, best_fitness, 0.1);
+            hill_climb_step(infra, &params, best_fitness, best_stability, 0.1);
 
         step_result.iteration = i;
         step_result.description = if kept {
@@ -86,6 +91,7 @@ pub fn run_continuous(
         if kept {
             params = perturbed;
             best_fitness = step_result.fitness;
+            best_stability = step_result.stability;
         }
     }
 }
