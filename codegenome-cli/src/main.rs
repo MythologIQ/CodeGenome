@@ -11,16 +11,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Run the index pipeline on a repository
-    Index,
-    /// Query the code graph
-    Query,
-    /// Show index freshness and system state
-    Status,
-    /// Verify Merkle chain integrity
-    Verify,
-    /// Start MCP tool server
-    Serve,
     /// Run autonomous experiment loop
     Experiment {
         /// Source directory to index
@@ -38,11 +28,6 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Index => commands::stub("index"),
-        Commands::Query => commands::stub("query"),
-        Commands::Status => commands::stub("status"),
-        Commands::Verify => commands::stub("verify"),
-        Commands::Serve => commands::stub("serve"),
         Commands::Experiment {
             source_dir,
             log_file,
