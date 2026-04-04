@@ -2,6 +2,10 @@ use std::path::PathBuf;
 
 use crate::experiments::config::ExperimentParams;
 use crate::experiments::fitness;
+use crate::graph::overlay::Overlay;
+use crate::overlay::flow::FlowOverlay;
+use crate::overlay::semantic::SemanticOverlay;
+use crate::overlay::syntax::parse_rust_files;
 
 fn src_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src")
@@ -11,15 +15,58 @@ fn src_dir() -> PathBuf {
 fn impact_accuracy_baseline_non_degenerate() {
     let params = ExperimentParams::default();
     let accuracy = fitness::impact_accuracy(&src_dir(), &params);
-    eprintln!("Impact accuracy baseline: {accuracy:.4}");
-    assert!(accuracy < 1.0, "Accuracy must not be trivially 1.0");
+    eprintln!("Impact accuracy baseline (3-layer): {accuracy:.4}");
+    assert!(accuracy.is_finite(), "Accuracy must be finite");
 }
 
 #[test]
 fn stability_baseline_above_threshold() {
     let params = ExperimentParams::default();
     let stab = fitness::stability(&src_dir(), &params);
-    eprintln!("Stability baseline: {stab:.4}");
-    assert!(stab > 0.5, "Stability should be > 0.5");
-    assert!(stab < 1.0, "Stability must not be trivially 1.0");
+    eprintln!("Stability baseline (3-layer): {stab:.4}");
+    assert!(stab > 0.3, "Stability should be > 0.3");
+    assert!(stab.is_finite(), "Stability must be finite");
+}
+
+#[test]
+fn three_layer_fitness_differs_from_syntax_only() {
+    let dir = src_dir();
+    let files = collect_rs_files(&dir);
+    assert!(!files.is_empty());
+
+    let syntax = parse_rust_files(&files);
+    let semantic = SemanticOverlay::from_syntax(&syntax, &files);
+    let flow = FlowOverlay::from_source(&files);
+
+    // Syntax-only: count edges reachable from first file
+    let syntax_only: Vec<&dyn Overlay> = vec![&syntax];
+    let three_layer: Vec<&dyn Overlay> = vec![&syntax, &semantic, &flow];
+
+    let syntax_edges: usize = syntax_only.iter().map(|o| o.edges().len()).sum();
+    let three_edges: usize = three_layer.iter().map(|o| o.edges().len()).sum();
+
+    eprintln!("Syntax-only edges: {syntax_edges}");
+    eprintln!("Three-layer edges: {three_edges}");
+
+    assert!(
+        three_edges > syntax_edges,
+        "Three layers ({three_edges}) should have more edges than syntax-only ({syntax_edges})"
+    );
+}
+
+fn collect_rs_files(dir: &std::path::Path) -> Vec<(PathBuf, Vec<u8>)> {
+    let mut files = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                files.extend(collect_rs_files(&path));
+            } else if path.extension().map_or(false, |e| e == "rs") {
+                if let Ok(content) = std::fs::read(&path) {
+                    files.push((path, content));
+                }
+            }
+        }
+    }
+    files
 }

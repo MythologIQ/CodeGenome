@@ -5,6 +5,8 @@ use crate::graph::edge::Relation;
 use crate::graph::node::NodeKind;
 use crate::graph::overlay::Overlay;
 use crate::identity::UorAddress;
+use crate::overlay::flow::FlowOverlay;
+use crate::overlay::semantic::SemanticOverlay;
 use crate::overlay::syntax::parse_rust_files;
 
 /// Impact prediction accuracy: for each sampled symbol,
@@ -18,29 +20,30 @@ pub fn impact_accuracy(
     if files.is_empty() {
         return 0.0;
     }
-    let overlay = parse_rust_files(&files);
-    let symbols = symbols_with_spans(&overlay);
+    let syntax = parse_rust_files(&files);
+    let semantic = SemanticOverlay::from_syntax(&syntax, &files);
+    let flow = FlowOverlay::from_source(&files);
+    let symbols = symbols_with_spans(&syntax);
     if symbols.is_empty() {
         return 0.0;
     }
 
     let threshold = param_or(params, "confidence_threshold", 0.5);
     let atten = param_or(params, "attenuation_factor", 0.8);
-    let overlays: &[&dyn Overlay] = &[&overlay];
+    let overlays: Vec<&dyn Overlay> = vec![&syntax, &semantic, &flow];
     let sample_size = symbols.len().min(10);
     let mut total_score = 0.0;
     let mut total_tests = 0u32;
 
     for symbol in symbols.iter().take(sample_size) {
-        let siblings = find_siblings(&overlay, symbol.address);
+        let siblings = find_siblings(&syntax, symbol.address);
         if siblings.is_empty() {
             continue;
         }
-        // Find parent file to propagate from
-        let parent = find_parent(&overlay, symbol.address);
+        let parent = find_parent(&syntax, symbol.address);
         let root = parent.unwrap_or(symbol.address);
         let impact = depth_propagate(
-            root, overlays, atten, threshold,
+            root, &overlays, atten, threshold,
         );
         let sibling_hits: f64 = siblings
             .iter()
@@ -68,9 +71,10 @@ pub fn stability(
     if files.is_empty() {
         return 1.0;
     }
-    let overlay = parse_rust_files(&files);
-    // Start from a File node so Contains edges propagate
-    let file_nodes: Vec<_> = overlay
+    let syntax = parse_rust_files(&files);
+    let semantic = SemanticOverlay::from_syntax(&syntax, &files);
+    let flow = FlowOverlay::from_source(&files);
+    let file_nodes: Vec<_> = syntax
         .nodes()
         .iter()
         .filter(|n| n.kind == NodeKind::File)
@@ -81,12 +85,12 @@ pub fn stability(
 
     let atten = param_or(params, "attenuation_factor", 0.8);
     let threshold = param_or(params, "confidence_threshold", 0.5);
-    let overlays: &[&dyn Overlay] = &[&overlay];
+    let overlays: Vec<&dyn Overlay> = vec![&syntax, &semantic, &flow];
     let root = file_nodes[0].address;
 
-    let set_a = depth_propagate(root, overlays, atten, threshold);
+    let set_a = depth_propagate(root, &overlays, atten, threshold);
     let perturbed = atten * 0.9;
-    let set_b = depth_propagate(root, overlays, perturbed, threshold);
+    let set_b = depth_propagate(root, &overlays, perturbed, threshold);
 
     let all_keys: std::collections::HashSet<_> = set_a
         .keys()

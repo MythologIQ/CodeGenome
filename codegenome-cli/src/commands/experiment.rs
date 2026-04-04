@@ -11,7 +11,7 @@ pub fn run(
 ) {
     let infra = ExperimentInfra {
         source_dir: PathBuf::from(source_dir),
-        overlays: vec![OverlayKind::Syntax],
+        overlays: vec![OverlayKind::Syntax, OverlayKind::Semantic, OverlayKind::Flow],
         fitness_fn: FitnessFunction::ImpactAccuracy,
     };
     let params = ExperimentParams::default();
