@@ -90,3 +90,21 @@ fn continuous_loop_runs_n_iterations() {
 
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn adaptive_loop_runs_without_panic() {
+    let dir = std::env::temp_dir().join("codegenome_adaptive_test");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let log_path = dir.join("results.tsv");
+
+    let infra = test_infra();
+    let params = ExperimentParams::default();
+
+    runner::run_continuous(&infra, params, &log_path, Some(20));
+
+    let results = log::read_log(&log_path).unwrap();
+    assert!(results.len() >= 20, "Should have at least 20 results");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}

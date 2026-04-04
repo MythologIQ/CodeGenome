@@ -5,6 +5,7 @@ use rand::Rng;
 use crate::experiments::config::*;
 use crate::experiments::fitness;
 use crate::experiments::log::{log_result, ExperimentResult};
+use crate::experiments::review::{self, Action, ReviewState};
 
 /// Run one experiment cycle. Returns fitness + stability.
 pub fn run_experiment(
@@ -12,10 +13,8 @@ pub fn run_experiment(
     params: &ExperimentParams,
 ) -> ExperimentResult {
     let start = std::time::Instant::now();
-
     let accuracy = fitness::impact_accuracy(&infra.source_dir, params);
     let stab = fitness::stability(&infra.source_dir, params);
-
     let elapsed = start.elapsed();
 
     ExperimentResult {
@@ -30,7 +29,6 @@ pub fn run_experiment(
 }
 
 /// Hill-climbing: perturb params, run, keep if better.
-/// Returns the perturbed result so we don't re-run.
 pub fn hill_climb_step(
     infra: &ExperimentInfra,
     current: &ExperimentParams,
@@ -47,53 +45,104 @@ pub fn hill_climb_step(
     (perturbed, result, kept)
 }
 
-/// Run experiments continuously until max_iterations.
+/// Mutable state for the continuous loop.
+struct LoopState {
+    params: ExperimentParams,
+    best_fitness: f64,
+    best_stability: f64,
+    scale: f64,
+    reviewer: ReviewState,
+}
+
+/// Run experiments continuously with adaptive review.
 pub fn run_continuous(
     infra: &ExperimentInfra,
     initial_params: ExperimentParams,
     log_path: &Path,
     max_iterations: Option<u64>,
 ) {
-    let mut params = initial_params;
-    let mut result = run_experiment(infra, &params);
+    let reviewer = ReviewState::new(10, 3, 0.1);
+    let mut state = LoopState {
+        scale: reviewer.base_scale(),
+        params: initial_params,
+        best_fitness: 0.0,
+        best_stability: 0.0,
+        reviewer,
+    };
+
+    let mut result = run_experiment(infra, &state.params);
     result.iteration = 0;
     result.description = "baseline".into();
     let _ = log_result(log_path, &result);
-    let mut best_fitness = result.fitness;
-    let mut best_stability = result.stability;
-
-    eprintln!(
-        "[0] baseline: fitness={:.4} stability={:.4} ({} ms)",
-        result.fitness, result.stability, result.cycle_time_ms,
-    );
+    state.best_fitness = result.fitness;
+    state.best_stability = result.stability;
+    state.reviewer.assess(result.fitness);
+    log_iteration(0, "baseline", &result);
 
     let limit = max_iterations.unwrap_or(u64::MAX);
     for i in 1..=limit {
-        let (perturbed, mut step_result, kept) =
-            hill_climb_step(infra, &params, best_fitness, best_stability, 0.1);
+        run_iteration(infra, &mut state, i, log_path);
+    }
+}
 
-        step_result.iteration = i;
-        step_result.description = if kept {
-            format!("keep: {}", format_params(&perturbed))
-        } else {
-            format!("discard: {}", format_params(&perturbed))
-        };
-        let _ = log_result(log_path, &step_result);
+/// One iteration: hill-climb, review, adapt, log.
+fn run_iteration(
+    infra: &ExperimentInfra,
+    state: &mut LoopState,
+    i: u64,
+    log_path: &Path,
+) {
+    let (perturbed, mut result, kept) = hill_climb_step(
+        infra, &state.params, state.best_fitness,
+        state.best_stability, state.scale,
+    );
+    result.iteration = i;
 
-        eprintln!(
-            "[{i}] {}: fitness={:.4} stability={:.4} ({} ms)",
-            if kept { "KEEP" } else { "discard" },
-            step_result.fitness,
-            step_result.stability,
-            step_result.cycle_time_ms,
-        );
+    let action = state.reviewer.assess(result.fitness);
+    state.scale = apply_action(
+        action, &mut state.params, state.scale,
+        &state.reviewer, &mut result,
+    );
 
-        if kept {
-            params = perturbed;
-            best_fitness = step_result.fitness;
-            best_stability = step_result.stability;
+    if kept {
+        state.params = perturbed;
+        state.best_fitness = result.fitness;
+        state.best_stability = result.stability;
+        result.description = format!("KEEP: {}", format_params(&state.params));
+    } else if result.description.is_empty() {
+        result.description = "discard".into();
+    }
+
+    log_iteration(i, &result.description, &result);
+    let _ = log_result(log_path, &result);
+}
+
+fn apply_action(
+    action: Action,
+    params: &mut ExperimentParams,
+    scale: f64,
+    reviewer: &ReviewState,
+    result: &mut ExperimentResult,
+) -> f64 {
+    match action {
+        Action::Continue => scale,
+        Action::WidenSearch(s) => {
+            result.description = format!("widen: scale={s:.3}");
+            s
+        }
+        Action::Restart => {
+            *params = review::random_params();
+            result.description = "RESTART: random params".into();
+            reviewer.base_scale()
         }
     }
+}
+
+fn log_iteration(i: u64, label: &str, result: &ExperimentResult) {
+    eprintln!(
+        "[{i}] {label}: fitness={:.4} stability={:.4} ({} ms)",
+        result.fitness, result.stability, result.cycle_time_ms,
+    );
 }
 
 fn perturb(
@@ -105,7 +154,6 @@ fn perturb(
     for (key, value) in new.values.iter_mut() {
         let delta: f64 = rng.random_range(-scale..=scale);
         *value += delta;
-        // Bound parameters to sensible ranges
         match key.as_str() {
             "confidence_threshold" => *value = value.clamp(0.01, 0.99),
             "attenuation_factor" => *value = value.clamp(0.1, 2.0),
