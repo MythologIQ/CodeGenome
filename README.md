@@ -8,7 +8,7 @@
   <a href="https://github.com/MythologIQ/CodeGenome/actions"><img src="https://img.shields.io/badge/tests-72%20passing-brightgreen" alt="Tests: 72 passing"></a>
   <a href="https://github.com/MythologIQ/CodeGenome"><img src="https://img.shields.io/badge/clippy-clean-blue" alt="Clippy: clean"></a>
   <a href="https://github.com/MythologIQ/CodeGenome"><img src="https://img.shields.io/badge/status-research%20prototype-yellow" alt="Status: research prototype"></a>
-  <a href="https://github.com/MythologIQ/CodeGenome"><img src="https://img.shields.io/badge/license-TBD-lightgrey" alt="License: TBD"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
 </p>
 
 ---
@@ -170,7 +170,7 @@ This is an active research project. The codebase evolves through a governance pr
 
 ## License
 
-License TBD. All rights reserved until a license is selected.
+[MIT](LICENSE)
 
 ---
 
