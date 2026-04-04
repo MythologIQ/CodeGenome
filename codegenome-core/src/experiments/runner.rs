@@ -5,6 +5,7 @@ use rand::Rng;
 use crate::experiments::config::*;
 use crate::experiments::fitness;
 use crate::experiments::log::{log_result, ExperimentResult};
+use crate::experiments::advisor;
 use crate::experiments::review::{self, Action, ReviewState};
 
 /// Run one experiment cycle. Returns fitness + stability.
@@ -98,7 +99,10 @@ fn run_iteration(
     );
     result.iteration = i;
 
-    let action = state.reviewer.assess(result.fitness);
+    let mut action = state.reviewer.assess(result.fitness);
+    if matches!(action, Action::Restart) {
+        action = maybe_consult_advisor(infra, log_path, action);
+    }
     state.scale = apply_action(
         action, &mut state.params, state.scale,
         &state.reviewer, &mut result,
@@ -135,7 +139,26 @@ fn apply_action(
             result.description = "RESTART: random params".into();
             reviewer.base_scale()
         }
+        Action::SwitchFitness(name) => {
+            result.description = format!("SWITCH_FITNESS: {name}");
+            reviewer.base_scale()
+        }
     }
+}
+
+fn maybe_consult_advisor(
+    infra: &ExperimentInfra,
+    log_path: &Path,
+    fallback: Action,
+) -> Action {
+    let Some(model_id) = &infra.model_id else {
+        return fallback;
+    };
+    let Ok(history) = crate::experiments::log::read_log(log_path) else {
+        return fallback;
+    };
+    let available = &["ImpactAccuracy", "PropagationDepth", "CycleTime", "GraphDensity"];
+    advisor::advise(&history, model_id, available)
 }
 
 fn log_iteration(i: u64, label: &str, result: &ExperimentResult) {

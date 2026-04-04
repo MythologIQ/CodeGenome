@@ -10,6 +10,7 @@ fn test_infra() -> ExperimentInfra {
             .join("src"),
         overlays: vec![crate::graph::overlay::OverlayKind::Syntax],
         fitness_fn: FitnessFunction::GraphDensity,
+        model_id: None,
     }
 }
 
@@ -70,7 +71,8 @@ fn tsv_logging_roundtrip() {
 
 #[test]
 fn continuous_loop_runs_n_iterations() {
-    let dir = std::env::temp_dir().join("codegenome_loop_test");
+    let id = std::thread::current().id();
+    let dir = std::env::temp_dir().join(format!("codegenome_loop_{id:?}"));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let log_path = dir.join("results.tsv");
@@ -93,7 +95,8 @@ fn continuous_loop_runs_n_iterations() {
 
 #[test]
 fn adaptive_loop_runs_without_panic() {
-    let dir = std::env::temp_dir().join("codegenome_adaptive_test");
+    let id = std::thread::current().id();
+    let dir = std::env::temp_dir().join(format!("codegenome_adaptive_{id:?}"));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let log_path = dir.join("results.tsv");

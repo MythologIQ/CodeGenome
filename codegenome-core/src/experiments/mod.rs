@@ -1,3 +1,4 @@
+pub mod advisor;
 pub mod config;
 pub mod fitness;
 pub mod log;

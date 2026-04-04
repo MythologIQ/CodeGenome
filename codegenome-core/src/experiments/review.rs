@@ -8,6 +8,7 @@ pub enum Action {
     Continue,
     WidenSearch(f64),
     Restart,
+    SwitchFitness(String),
 }
 
 /// Tracks experiment history and detects plateaus.

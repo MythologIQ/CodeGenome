@@ -1,3 +1,4 @@
+mod advisor_tests;
 mod fitness_tests;
 mod overlay_isolation;
 mod review_tests;

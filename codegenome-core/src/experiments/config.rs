@@ -9,6 +9,7 @@ pub struct ExperimentInfra {
     pub source_dir: PathBuf,
     pub overlays: Vec<OverlayKind>,
     pub fitness_fn: FitnessFunction,
+    pub model_id: Option<String>,
 }
 
 /// Mutable experiment surface.
