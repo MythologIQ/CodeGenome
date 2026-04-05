@@ -11,21 +11,48 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Run autonomous experiment loop
-    Experiment {
-        /// Source directory to index
+    /// Build the code graph from source files
+    Index {
         #[arg(long, default_value = ".")]
         source_dir: String,
-        /// TSV log file path
+        #[arg(long, default_value = ".codegenome")]
+        store_dir: String,
+    },
+    /// Query impact from a file:line location
+    Query {
+        #[arg(long, default_value = ".codegenome")]
+        store_dir: String,
+        #[arg(long)]
+        file: String,
+        #[arg(long)]
+        line: u32,
+        #[arg(long, default_value = "downstream")]
+        direction: String,
+        #[arg(long)]
+        json: bool,
+    },
+    /// Show index status and overlay counts
+    Status {
+        #[arg(long, default_value = ".codegenome")]
+        store_dir: String,
+        #[arg(long)]
+        json: bool,
+    },
+    /// Verify experiment TSV chain integrity
+    Verify {
         #[arg(long, default_value = "experiments.tsv")]
         log_file: String,
-        /// Maximum iterations (infinite if omitted)
+    },
+    /// Run autonomous experiment loop
+    Experiment {
+        #[arg(long, default_value = ".")]
+        source_dir: String,
+        #[arg(long, default_value = "experiments.tsv")]
+        log_file: String,
         #[arg(long)]
         max_iterations: Option<u64>,
-        /// LLM model ID for Tier 2 advisor (default: Phi-3 Mini)
         #[arg(long, default_value = "microsoft/Phi-3-mini-4k-instruct")]
         model: String,
-        /// Disable Tier 2 LLM advisor
         #[arg(long)]
         no_model: bool,
     },
@@ -34,16 +61,22 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
     match cli.command {
+        Commands::Index { source_dir, store_dir } => {
+            commands::index::run(&source_dir, &store_dir);
+        }
+        Commands::Query { store_dir, file, line, direction, json } => {
+            commands::query::run(&store_dir, &file, line, &direction, json);
+        }
+        Commands::Status { store_dir, json } => {
+            commands::status::run(&store_dir, json);
+        }
+        Commands::Verify { log_file } => {
+            commands::verify::run(&log_file);
+        }
         Commands::Experiment {
-            source_dir,
-            log_file,
-            max_iterations,
-            model,
-            no_model,
+            source_dir, log_file, max_iterations, model, no_model,
         } => commands::experiment::run(
-            &source_dir,
-            &log_file,
-            max_iterations,
+            &source_dir, &log_file, max_iterations,
             if no_model { None } else { Some(model) },
         ),
     }
