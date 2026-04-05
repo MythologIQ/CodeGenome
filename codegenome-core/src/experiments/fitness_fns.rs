@@ -10,11 +10,11 @@ pub fn propagation_depth(
     source_dir: &Path,
     params: &ExperimentParams,
 ) -> f64 {
-    let Some((syntax, semantic, flow, _)) = build_overlays(source_dir) else {
+    let Some(fused) = build_overlays(source_dir) else {
         return 0.0;
     };
-    let overlays: Vec<&dyn Overlay> = vec![&syntax, &semantic, &flow];
-    let symbols: Vec<_> = syntax
+    let overlays: Vec<&dyn Overlay> = vec![&fused];
+    let symbols: Vec<_> = fused
         .nodes()
         .iter()
         .filter(|n| n.kind == NodeKind::Symbol && n.span.is_some())
@@ -44,11 +44,11 @@ pub fn cycle_time(
     params: &ExperimentParams,
 ) -> f64 {
     let start = std::time::Instant::now();
-    let Some((syntax, semantic, flow, _)) = build_overlays(source_dir) else {
+    let Some(fused) = build_overlays(source_dir) else {
         return 0.0;
     };
-    let overlays: Vec<&dyn Overlay> = vec![&syntax, &semantic, &flow];
-    let file_node = syntax
+    let overlays: Vec<&dyn Overlay> = vec![&fused];
+    let file_node = fused
         .nodes()
         .iter()
         .find(|n| n.kind == NodeKind::File);
@@ -61,20 +61,16 @@ pub fn cycle_time(
     (1.0 - ms / 5000.0).clamp(0.0, 1.0)
 }
 
-/// Edge-to-node ratio across all three overlays.
+/// Edge-to-node ratio in fused overlay.
 pub fn graph_density(
     source_dir: &Path,
     _params: &ExperimentParams,
 ) -> f64 {
-    let Some((syntax, semantic, flow, _)) = build_overlays(source_dir) else {
+    let Some(fused) = build_overlays(source_dir) else {
         return 0.0;
     };
-    let total_nodes = syntax.nodes().len()
-        + semantic.nodes().len()
-        + flow.nodes().len();
-    let total_edges = syntax.edges().len()
-        + semantic.edges().len()
-        + flow.edges().len();
+    let total_nodes = fused.nodes().len();
+    let total_edges = fused.edges().len();
     if total_nodes == 0 {
         return 0.0;
     }

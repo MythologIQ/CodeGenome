@@ -6,8 +6,9 @@ use crate::graph::node::NodeKind;
 use crate::graph::overlay::Overlay;
 use crate::identity::UorAddress;
 use crate::overlay::flow::FlowOverlay;
+use crate::overlay::fused::{self, FusedOverlay};
 use crate::overlay::semantic::SemanticOverlay;
-use crate::overlay::syntax::{parse_rust_files, SyntaxOverlay};
+use crate::overlay::syntax::parse_rust_files;
 
 pub use crate::experiments::fitness_fns;
 
@@ -33,27 +34,27 @@ pub fn impact_accuracy(
     source_dir: &Path,
     params: &ExperimentParams,
 ) -> f64 {
-    let Some((syntax, semantic, flow, _)) = build_overlays(source_dir) else {
+    let Some(fused) = build_overlays(source_dir) else {
         return 0.0;
     };
-    let symbols = symbols_with_spans(&syntax);
+    let symbols = symbols_with_spans(&fused);
     if symbols.is_empty() {
         return 0.0;
     }
 
     let threshold = param_or(params, "confidence_threshold", 0.5);
     let atten = param_or(params, "attenuation_factor", 0.8);
-    let overlays: Vec<&dyn Overlay> = vec![&syntax, &semantic, &flow];
+    let overlays: Vec<&dyn Overlay> = vec![&fused];
     let sample_size = symbols.len().min(10);
     let mut total_score = 0.0;
     let mut total_tests = 0u32;
 
     for symbol in symbols.iter().take(sample_size) {
-        let siblings = find_siblings(&syntax, symbol.address);
+        let siblings = find_siblings(&fused, symbol.address);
         if siblings.is_empty() {
             continue;
         }
-        let parent = find_parent(&syntax, symbol.address);
+        let parent = find_parent(&fused, symbol.address);
         let root = parent.unwrap_or(symbol.address);
         let impact = depth_propagate(
             root, &overlays, atten, threshold,
@@ -80,10 +81,10 @@ pub fn stability(
     source_dir: &Path,
     params: &ExperimentParams,
 ) -> f64 {
-    let Some((syntax, semantic, flow, _files)) = build_overlays(source_dir) else {
+    let Some(fused) = build_overlays(source_dir) else {
         return 1.0;
     };
-    let file_nodes: Vec<_> = syntax
+    let file_nodes: Vec<_> = fused
         .nodes()
         .iter()
         .filter(|n| n.kind == NodeKind::File)
@@ -94,7 +95,7 @@ pub fn stability(
 
     let atten = param_or(params, "attenuation_factor", 0.8);
     let threshold = param_or(params, "confidence_threshold", 0.5);
-    let overlays: Vec<&dyn Overlay> = vec![&syntax, &semantic, &flow];
+    let overlays: Vec<&dyn Overlay> = vec![&fused];
     let root = file_nodes[0].address;
 
     let set_a = depth_propagate(root, &overlays, atten, threshold);
@@ -119,10 +120,8 @@ pub fn stability(
     (1.0 - mean_diff).clamp(0.0, 1.0)
 }
 
-pub(crate) type Overlays = (SyntaxOverlay, SemanticOverlay, FlowOverlay, Vec<(std::path::PathBuf, Vec<u8>)>);
-
-/// Build all three overlays from source directory. Returns None if empty.
-pub(crate) fn build_overlays(source_dir: &Path) -> Option<Overlays> {
+/// Build all three overlays and fuse into one. Returns None if empty.
+pub(crate) fn build_overlays(source_dir: &Path) -> Option<FusedOverlay> {
     let files = collect_rs_files(source_dir);
     if files.is_empty() {
         return None;
@@ -130,7 +129,7 @@ pub(crate) fn build_overlays(source_dir: &Path) -> Option<Overlays> {
     let syntax = parse_rust_files(&files);
     let semantic = SemanticOverlay::from_syntax(&syntax, &files);
     let flow = FlowOverlay::from_source(&files);
-    Some((syntax, semantic, flow, files))
+    Some(fused::fuse(&[&syntax, &semantic, &flow]))
 }
 
 /// BFS propagation that applies attenuation per hop.
