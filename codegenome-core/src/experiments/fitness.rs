@@ -116,7 +116,7 @@ pub fn stability(
         .sum();
     let mean_diff = sum_diff / total;
 
-    1.0 - mean_diff
+    (1.0 - mean_diff).clamp(0.0, 1.0)
 }
 
 pub(crate) type Overlays = (SyntaxOverlay, SemanticOverlay, FlowOverlay, Vec<(std::path::PathBuf, Vec<u8>)>);
@@ -153,7 +153,7 @@ pub(crate) fn depth_propagate(
                     continue;
                 }
                 let child_score =
-                    score * edge.confidence * attenuation;
+                    (score * edge.confidence * attenuation).min(1.0);
                 if child_score < threshold {
                     continue;
                 }
