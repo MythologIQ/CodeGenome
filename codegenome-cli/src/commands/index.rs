@@ -5,6 +5,7 @@ use codegenome_core::overlay::flow::FlowOverlay;
 use codegenome_core::overlay::fused;
 use codegenome_core::overlay::semantic::SemanticOverlay;
 use codegenome_core::overlay::syntax::parse_rust_files;
+use codegenome_core::store::meta::{self, IndexMeta};
 use codegenome_core::store::ondisk::OnDiskStore;
 use codegenome_core::store::backend::StoreBackend;
 
@@ -23,6 +24,20 @@ pub fn run(source_dir: &str, store_dir: &str) {
 
     let store = OnDiskStore::new(store_dir);
     let _ = store.write_overlay(&OverlayKind::Custom("fused".into()), fused.nodes(), fused.edges());
+
+    let source_hashes = meta::hash_source_files(std::path::Path::new(source_dir));
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let index_meta = IndexMeta {
+        timestamp: now,
+        file_count: files.len(),
+        node_count: fused.nodes().len(),
+        edge_count: fused.edges().len(),
+        source_hashes,
+    };
+    let _ = meta::save(std::path::Path::new(store_dir), &index_meta);
 
     let elapsed = start.elapsed();
     println!("Indexed {} files → {} nodes, {} edges ({:.0}ms)",

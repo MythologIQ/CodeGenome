@@ -1,7 +1,9 @@
 use codegenome_core::store::backend::StoreBackend;
+use codegenome_core::store::meta;
 use codegenome_core::store::ondisk::OnDiskStore;
 
 pub fn run(store_dir: &str, json: bool) {
+    show_freshness(store_dir);
     let store = OnDiskStore::new(store_dir);
     let kinds = match store.list_overlays() {
         Ok(k) => k,
@@ -33,6 +35,24 @@ fn print_table(entries: &[(String, usize, usize)]) {
     for (name, nodes, edges) in entries {
         println!("{name:<20} {nodes:>8} {edges:>8}");
     }
+}
+
+fn show_freshness(store_dir: &str) {
+    let report = meta::check_freshness(
+        std::path::Path::new(store_dir),
+        std::path::Path::new("."),
+    );
+    if report.last_indexed == 0 {
+        println!("Freshness: NOT INDEXED");
+    } else if report.is_fresh {
+        println!("Freshness: FRESH (indexed at {})", report.last_indexed);
+    } else {
+        println!(
+            "Freshness: STALE ({} changed, {} added, {} removed)",
+            report.files_changed, report.files_added, report.files_removed,
+        );
+    }
+    println!();
 }
 
 fn print_json(entries: &[(String, usize, usize)]) {

@@ -8,4 +8,5 @@ mod flow_tests;
 mod fusion_tests;
 mod process_tests;
 mod evidence_tests;
+mod governance_tests;
 mod experiments;
