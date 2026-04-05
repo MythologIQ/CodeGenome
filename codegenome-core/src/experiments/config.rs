@@ -30,7 +30,7 @@ impl Default for ExperimentParams {
 }
 
 /// Fitness function selection.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum FitnessFunction {
     /// Does impact prediction match actual breakage?
     ImpactAccuracy,

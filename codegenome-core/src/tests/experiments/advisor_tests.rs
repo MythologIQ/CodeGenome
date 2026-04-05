@@ -13,6 +13,7 @@ fn sample_results() -> Vec<ExperimentResult> {
             status: ExperimentStatus::Pass,
             cycle_time_ms: 100,
             description: format!("iter {i}"),
+            chain_hash: String::new(),
         })
         .collect()
 }

@@ -63,6 +63,36 @@ impl ReviewState {
     pub fn base_scale(&self) -> f64 {
         self.base_scale
     }
+
+    pub fn plateau_count(&self) -> u32 {
+        self.plateau_count
+    }
+
+    pub fn widen_count(&self) -> u32 {
+        self.widen_count
+    }
+
+    pub fn best_fitness(&self) -> f64 {
+        self.best_fitness
+    }
+
+    pub fn resume(
+        plateau_threshold: u32,
+        restart_threshold: u32,
+        base_scale: f64,
+        plateau_count: u32,
+        widen_count: u32,
+        best_fitness: f64,
+    ) -> Self {
+        Self {
+            plateau_count,
+            plateau_threshold,
+            restart_threshold,
+            widen_count,
+            base_scale,
+            best_fitness,
+        }
+    }
 }
 
 /// Generate random params within bounded ranges.

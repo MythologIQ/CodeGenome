@@ -1,12 +1,11 @@
 use std::path::Path;
 
-use rand::Rng;
-
+use crate::experiments::checkpoint::{self, Checkpoint};
 use crate::experiments::config::*;
 use crate::experiments::fitness;
-use crate::experiments::log::{log_result, ExperimentResult};
-use crate::experiments::advisor;
-use crate::experiments::review::{self, Action, ReviewState};
+use crate::experiments::log::{self, log_result, ExperimentResult};
+use crate::experiments::review::{Action, ReviewState};
+use crate::experiments::runner_helpers::*;
 
 /// Run one experiment cycle. Returns fitness + stability.
 pub fn run_experiment(
@@ -27,6 +26,7 @@ pub fn run_experiment(
         status: ExperimentStatus::Pass,
         cycle_time_ms: elapsed.as_millis() as u64,
         description: format_params(params),
+        chain_hash: String::new(),
     }
 }
 
@@ -48,22 +48,57 @@ pub fn hill_climb_step(
 }
 
 /// Mutable state for the continuous loop.
-struct LoopState {
-    params: ExperimentParams,
-    fitness_fn: FitnessFunction,
-    best_fitness: f64,
-    best_stability: f64,
-    scale: f64,
-    reviewer: ReviewState,
+pub(crate) struct LoopState {
+    pub params: ExperimentParams,
+    pub fitness_fn: FitnessFunction,
+    pub best_fitness: f64,
+    pub best_stability: f64,
+    pub scale: f64,
+    pub reviewer: ReviewState,
+    pub chain_hash: String,
 }
 
-/// Run experiments continuously with adaptive review.
+/// Run experiments with adaptive review, checkpointing, and chain integrity.
 pub fn run_continuous(
     infra: &ExperimentInfra,
     initial_params: ExperimentParams,
     log_path: &Path,
     max_iterations: Option<u64>,
 ) {
+    let (mut state, start_iter) =
+        init_or_resume(infra, initial_params, log_path);
+
+    let limit = max_iterations.unwrap_or(u64::MAX);
+    for i in start_iter..=limit {
+        run_iteration(infra, &mut state, i, log_path);
+        save_checkpoint(&state, i, log_path);
+    }
+}
+
+fn init_or_resume(
+    infra: &ExperimentInfra,
+    initial_params: ExperimentParams,
+    log_path: &Path,
+) -> (LoopState, u64) {
+    let cp_path = checkpoint::checkpoint_path(log_path);
+    if let Ok(cp) = checkpoint::load(&cp_path) {
+        if let Err(e) = log::read_log(log_path) {
+            eprintln!("[ABORT] TSV integrity check failed: {e}");
+            std::process::exit(1);
+        }
+        eprintln!("[RESUME] from iteration {}", cp.iteration);
+        let state = restore_state(&cp);
+        return (state, cp.iteration + 1);
+    }
+    let state = fresh_start(infra, initial_params, log_path);
+    (state, 1)
+}
+
+fn fresh_start(
+    infra: &ExperimentInfra,
+    initial_params: ExperimentParams,
+    log_path: &Path,
+) -> LoopState {
     let reviewer = ReviewState::new(10, 3, 0.1);
     let mut state = LoopState {
         fitness_fn: infra.fitness_fn.clone(),
@@ -72,20 +107,34 @@ pub fn run_continuous(
         best_fitness: 0.0,
         best_stability: 0.0,
         reviewer,
+        chain_hash: log::genesis_hash(),
     };
-
     let mut result = run_experiment(infra, &state.params, &state.fitness_fn);
     result.iteration = 0;
     result.description = "baseline".into();
-    let _ = log_result(log_path, &result);
+    if let Ok(h) = log_result(log_path, &result, &state.chain_hash) {
+        state.chain_hash = h;
+    }
     state.best_fitness = result.fitness;
     state.best_stability = result.stability;
     state.reviewer.assess(result.fitness);
     log_iteration(0, "baseline", &result);
+    state
+}
 
-    let limit = max_iterations.unwrap_or(u64::MAX);
-    for i in 1..=limit {
-        run_iteration(infra, &mut state, i, log_path);
+fn restore_state(cp: &Checkpoint) -> LoopState {
+    let reviewer = ReviewState::resume(
+        10, 3, 0.1,
+        cp.plateau_count, cp.widen_count, cp.best_fitness,
+    );
+    LoopState {
+        params: ExperimentParams { values: cp.params.clone() },
+        fitness_fn: parse_fitness_fn(&cp.fitness_fn),
+        best_fitness: cp.best_fitness,
+        best_stability: cp.best_stability,
+        scale: cp.scale,
+        reviewer,
+        chain_hash: cp.last_chain_hash.clone(),
     }
 }
 
@@ -127,94 +176,23 @@ fn run_iteration(
     }
 
     log_iteration(i, &result.description, &result);
-    let _ = log_result(log_path, &result);
-}
-
-fn apply_action(
-    action: Action,
-    params: &mut ExperimentParams,
-    scale: f64,
-    reviewer: &ReviewState,
-    result: &mut ExperimentResult,
-) -> (f64, Option<FitnessFunction>) {
-    match action {
-        Action::Continue => (scale, None),
-        Action::WidenSearch(s) => {
-            result.description = format!("widen: scale={s:.3}");
-            (s, None)
-        }
-        Action::Restart => {
-            *params = review::random_params();
-            result.description = "RESTART: random params".into();
-            (reviewer.base_scale(), None)
-        }
-        Action::SwitchFitness(ref name) => {
-            let ff = parse_fitness_fn(name);
-            result.description = format!("SWITCH_FITNESS: {name}");
-            (reviewer.base_scale(), Some(ff))
-        }
+    if let Ok(h) = log_result(log_path, &result, &state.chain_hash) {
+        state.chain_hash = h;
     }
 }
 
-fn parse_fitness_fn(name: &str) -> FitnessFunction {
-    match name {
-        "ImpactAccuracy" => FitnessFunction::ImpactAccuracy,
-        "PropagationDepth" => FitnessFunction::PropagationDepth,
-        "CycleTime" => FitnessFunction::CycleTime,
-        "GraphDensity" => FitnessFunction::GraphDensity,
-        other => FitnessFunction::Custom(other.to_string()),
-    }
-}
-
-fn maybe_consult_advisor(
-    infra: &ExperimentInfra,
-    log_path: &Path,
-    fallback: Action,
-) -> Action {
-    let Some(model_id) = &infra.model_id else {
-        return fallback;
+fn save_checkpoint(state: &LoopState, i: u64, log_path: &Path) {
+    let cp = Checkpoint {
+        iteration: i,
+        params: state.params.values.clone(),
+        fitness_fn: format!("{:?}", state.fitness_fn),
+        best_fitness: state.best_fitness,
+        best_stability: state.best_stability,
+        scale: state.scale,
+        plateau_count: state.reviewer.plateau_count(),
+        widen_count: state.reviewer.widen_count(),
+        last_chain_hash: state.chain_hash.clone(),
     };
-    let Ok(history) = crate::experiments::log::read_log(log_path) else {
-        return fallback;
-    };
-    let available = &["ImpactAccuracy", "PropagationDepth", "CycleTime", "GraphDensity"];
-    advisor::advise(&history, model_id, available)
-}
-
-fn log_iteration(i: u64, label: &str, result: &ExperimentResult) {
-    eprintln!(
-        "[{i}] {label}: fitness={:.4} stability={:.4} ({} ms)",
-        result.fitness, result.stability, result.cycle_time_ms,
-    );
-}
-
-fn perturb(
-    params: &ExperimentParams,
-    scale: f64,
-) -> ExperimentParams {
-    let mut rng = rand::rng();
-    let mut new = params.clone();
-    for (key, value) in new.values.iter_mut() {
-        let delta: f64 = rng.random_range(-scale..=scale);
-        *value += delta;
-        match key.as_str() {
-            "confidence_threshold" => *value = value.clamp(0.01, 0.99),
-            "attenuation_factor" => *value = value.clamp(0.1, 2.0),
-            "max_depth" => *value = value.clamp(1.0, 20.0),
-            _ => {}
-        }
-    }
-    new
-}
-
-fn format_params(params: &ExperimentParams) -> String {
-    if params.values.is_empty() {
-        return "default".into();
-    }
-    params
-        .values
-        .iter()
-        .map(|(k, v)| format!("{k}={v:.3}"))
-        .collect::<Vec<_>>()
-        .join(", ")
+    let cp_path = checkpoint::checkpoint_path(log_path);
+    let _ = checkpoint::save(&cp_path, &cp);
 }

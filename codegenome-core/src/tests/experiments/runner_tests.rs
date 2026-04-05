@@ -56,11 +56,12 @@ fn tsv_logging_roundtrip() {
         status: ExperimentStatus::Pass,
         cycle_time_ms: 42,
         description: "test run".into(),
+        chain_hash: String::new(),
     };
 
-    log::log_result(&log_path, &result).unwrap();
-    log::log_result(&log_path, &result).unwrap();
-    log::log_result(&log_path, &result).unwrap();
+    let h1 = log::log_result(&log_path, &result, &log::genesis_hash()).unwrap();
+    let h2 = log::log_result(&log_path, &result, &h1).unwrap();
+    let _ = log::log_result(&log_path, &result, &h2).unwrap();
 
     let results = log::read_log(&log_path).unwrap();
     assert_eq!(results.len(), 3);
