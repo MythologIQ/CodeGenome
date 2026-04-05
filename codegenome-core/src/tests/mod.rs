@@ -6,4 +6,6 @@ mod detect_changes_signal;
 mod semantic_tests;
 mod flow_tests;
 mod fusion_tests;
+mod process_tests;
+mod evidence_tests;
 mod experiments;

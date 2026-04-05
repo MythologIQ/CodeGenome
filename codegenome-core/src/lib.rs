@@ -1,5 +1,6 @@
 pub mod confidence;
 pub mod diff;
+pub mod evidence;
 pub mod experiments;
 pub mod graph;
 pub mod identity;
