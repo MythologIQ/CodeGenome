@@ -38,6 +38,11 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+    /// Start MCP tool server (stdio)
+    Serve {
+        #[arg(long, default_value = ".codegenome")]
+        store_dir: String,
+    },
     /// Verify experiment TSV chain integrity
     Verify {
         #[arg(long, default_value = "experiments.tsv")]
@@ -69,6 +74,9 @@ fn main() {
         }
         Commands::Status { store_dir, json } => {
             commands::status::run(&store_dir, json);
+        }
+        Commands::Serve { store_dir } => {
+            commands::serve::run(&store_dir);
         }
         Commands::Verify { log_file } => {
             commands::verify::run(&log_file);
