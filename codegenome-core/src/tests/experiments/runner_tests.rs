@@ -18,7 +18,7 @@ fn test_infra() -> ExperimentInfra {
 fn single_experiment_produces_valid_result() {
     let infra = test_infra();
     let params = ExperimentParams::default();
-    let result = runner::run_experiment(&infra, &params);
+    let result = runner::run_experiment(&infra, &params, &infra.fitness_fn);
 
     assert_eq!(result.status, ExperimentStatus::Pass);
     assert!(result.fitness < 1.0, "Fitness must not be trivially 1.0");
@@ -29,7 +29,7 @@ fn single_experiment_produces_valid_result() {
 fn hill_climb_step_keeps_or_discards() {
     let infra = test_infra();
     let params = ExperimentParams::default();
-    let baseline = runner::run_experiment(&infra, &params);
+    let baseline = runner::run_experiment(&infra, &params, &infra.fitness_fn);
 
     let (_, result, _kept) = runner::hill_climb_step(
         &infra,

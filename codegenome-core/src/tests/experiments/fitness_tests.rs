@@ -54,6 +54,42 @@ fn three_layer_fitness_differs_from_syntax_only() {
     );
 }
 
+#[test]
+fn propagation_depth_produces_finite_score() {
+    let params = ExperimentParams::default();
+    let score = crate::experiments::fitness_fns::propagation_depth(&src_dir(), &params);
+    eprintln!("PropagationDepth: {score:.4}");
+    assert!(score.is_finite() && score >= 0.0 && score <= 1.0);
+}
+
+#[test]
+fn cycle_time_produces_finite_score() {
+    let params = ExperimentParams::default();
+    let score = crate::experiments::fitness_fns::cycle_time(&src_dir(), &params);
+    eprintln!("CycleTime: {score:.4}");
+    assert!(score.is_finite() && score >= 0.0 && score <= 1.0);
+}
+
+#[test]
+fn graph_density_produces_finite_score() {
+    let params = ExperimentParams::default();
+    let score = crate::experiments::fitness_fns::graph_density(&src_dir(), &params);
+    eprintln!("GraphDensity: {score:.4}");
+    assert!(score.is_finite() && score >= 0.0 && score <= 1.0);
+}
+
+#[test]
+fn graph_density_three_layer_greater_than_syntax() {
+    let dir = src_dir();
+    let files = collect_rs_files(&dir);
+    let syntax = parse_rust_files(&files);
+    let syntax_density = syntax.edges().len() as f64
+        / syntax.nodes().len().max(1) as f64;
+    let three_density = crate::experiments::fitness_fns::graph_density(&dir, &ExperimentParams::default());
+    eprintln!("Syntax density: {syntax_density:.4}, Three-layer: {three_density:.4}");
+    assert!(three_density >= syntax_density.min(1.0));
+}
+
 fn collect_rs_files(dir: &std::path::Path) -> Vec<(PathBuf, Vec<u8>)> {
     let mut files = Vec::new();
     if let Ok(entries) = std::fs::read_dir(dir) {

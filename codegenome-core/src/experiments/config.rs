@@ -30,7 +30,7 @@ impl Default for ExperimentParams {
 }
 
 /// Fitness function selection.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum FitnessFunction {
     /// Does impact prediction match actual breakage?
     ImpactAccuracy,

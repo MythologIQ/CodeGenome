@@ -1,13 +1,30 @@
 use std::path::Path;
 
-use crate::experiments::config::ExperimentParams;
+use crate::experiments::config::{ExperimentParams, FitnessFunction};
 use crate::graph::edge::Relation;
 use crate::graph::node::NodeKind;
 use crate::graph::overlay::Overlay;
 use crate::identity::UorAddress;
 use crate::overlay::flow::FlowOverlay;
 use crate::overlay::semantic::SemanticOverlay;
-use crate::overlay::syntax::parse_rust_files;
+use crate::overlay::syntax::{parse_rust_files, SyntaxOverlay};
+
+pub use crate::experiments::fitness_fns;
+
+/// Dispatch a fitness function by enum variant.
+pub fn dispatch(
+    func: &FitnessFunction,
+    source_dir: &Path,
+    params: &ExperimentParams,
+) -> f64 {
+    match func {
+        FitnessFunction::ImpactAccuracy => impact_accuracy(source_dir, params),
+        FitnessFunction::PropagationDepth => fitness_fns::propagation_depth(source_dir, params),
+        FitnessFunction::CycleTime => fitness_fns::cycle_time(source_dir, params),
+        FitnessFunction::GraphDensity => fitness_fns::graph_density(source_dir, params),
+        FitnessFunction::Custom(_) => 0.0,
+    }
+}
 
 /// Impact prediction accuracy: for each sampled symbol,
 /// propagate from it with attenuation and check what
@@ -16,13 +33,9 @@ pub fn impact_accuracy(
     source_dir: &Path,
     params: &ExperimentParams,
 ) -> f64 {
-    let files = collect_rs_files(source_dir);
-    if files.is_empty() {
+    let Some((syntax, semantic, flow, _)) = build_overlays(source_dir) else {
         return 0.0;
-    }
-    let syntax = parse_rust_files(&files);
-    let semantic = SemanticOverlay::from_syntax(&syntax, &files);
-    let flow = FlowOverlay::from_source(&files);
+    };
     let symbols = symbols_with_spans(&syntax);
     if symbols.is_empty() {
         return 0.0;
@@ -67,13 +80,9 @@ pub fn stability(
     source_dir: &Path,
     params: &ExperimentParams,
 ) -> f64 {
-    let files = collect_rs_files(source_dir);
-    if files.is_empty() {
+    let Some((syntax, semantic, flow, _files)) = build_overlays(source_dir) else {
         return 1.0;
-    }
-    let syntax = parse_rust_files(&files);
-    let semantic = SemanticOverlay::from_syntax(&syntax, &files);
-    let flow = FlowOverlay::from_source(&files);
+    };
     let file_nodes: Vec<_> = syntax
         .nodes()
         .iter()
@@ -110,8 +119,22 @@ pub fn stability(
     1.0 - mean_diff
 }
 
+pub(crate) type Overlays = (SyntaxOverlay, SemanticOverlay, FlowOverlay, Vec<(std::path::PathBuf, Vec<u8>)>);
+
+/// Build all three overlays from source directory. Returns None if empty.
+pub(crate) fn build_overlays(source_dir: &Path) -> Option<Overlays> {
+    let files = collect_rs_files(source_dir);
+    if files.is_empty() {
+        return None;
+    }
+    let syntax = parse_rust_files(&files);
+    let semantic = SemanticOverlay::from_syntax(&syntax, &files);
+    let flow = FlowOverlay::from_source(&files);
+    Some((syntax, semantic, flow, files))
+}
+
 /// BFS propagation that applies attenuation per hop.
-fn depth_propagate(
+pub(crate) fn depth_propagate(
     root: UorAddress,
     overlays: &[&dyn Overlay],
     attenuation: f64,
@@ -198,7 +221,7 @@ fn symbols_with_spans(
         .collect()
 }
 
-fn collect_rs_files(
+pub(crate) fn collect_rs_files(
     dir: &Path,
 ) -> Vec<(std::path::PathBuf, Vec<u8>)> {
     let mut files = Vec::new();
@@ -218,7 +241,7 @@ fn collect_rs_files(
     files
 }
 
-fn param_or(
+pub(crate) fn param_or(
     params: &ExperimentParams,
     key: &str,
     default: f64,

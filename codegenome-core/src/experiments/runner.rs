@@ -12,9 +12,10 @@ use crate::experiments::review::{self, Action, ReviewState};
 pub fn run_experiment(
     infra: &ExperimentInfra,
     params: &ExperimentParams,
+    fitness_fn: &FitnessFunction,
 ) -> ExperimentResult {
     let start = std::time::Instant::now();
-    let accuracy = fitness::impact_accuracy(&infra.source_dir, params);
+    let accuracy = fitness::dispatch(fitness_fn, &infra.source_dir, params);
     let stab = fitness::stability(&infra.source_dir, params);
     let elapsed = start.elapsed();
 
@@ -38,7 +39,7 @@ pub fn hill_climb_step(
     perturbation_scale: f64,
 ) -> (ExperimentParams, ExperimentResult, bool) {
     let perturbed = perturb(current, perturbation_scale);
-    let result = run_experiment(infra, &perturbed);
+    let result = run_experiment(infra, &perturbed, &infra.fitness_fn);
     let dominated = result.fitness > current_fitness;
     let pareto = (result.fitness - current_fitness).abs() < 0.0001
         && result.stability > current_stability;
@@ -49,6 +50,7 @@ pub fn hill_climb_step(
 /// Mutable state for the continuous loop.
 struct LoopState {
     params: ExperimentParams,
+    fitness_fn: FitnessFunction,
     best_fitness: f64,
     best_stability: f64,
     scale: f64,
@@ -64,6 +66,7 @@ pub fn run_continuous(
 ) {
     let reviewer = ReviewState::new(10, 3, 0.1);
     let mut state = LoopState {
+        fitness_fn: infra.fitness_fn.clone(),
         scale: reviewer.base_scale(),
         params: initial_params,
         best_fitness: 0.0,
@@ -71,7 +74,7 @@ pub fn run_continuous(
         reviewer,
     };
 
-    let mut result = run_experiment(infra, &state.params);
+    let mut result = run_experiment(infra, &state.params, &state.fitness_fn);
     result.iteration = 0;
     result.description = "baseline".into();
     let _ = log_result(log_path, &result);
@@ -99,14 +102,20 @@ fn run_iteration(
     );
     result.iteration = i;
 
-    let mut action = state.reviewer.assess(result.fitness);
-    if matches!(action, Action::Restart) {
-        action = maybe_consult_advisor(infra, log_path, action);
-    }
-    state.scale = apply_action(
+    let action = state.reviewer.assess(result.fitness);
+    let action = if matches!(&action, Action::Restart) {
+        maybe_consult_advisor(infra, log_path, action)
+    } else {
+        action
+    };
+    let (new_scale, new_ff) = apply_action(
         action, &mut state.params, state.scale,
         &state.reviewer, &mut result,
     );
+    state.scale = new_scale;
+    if let Some(ff) = new_ff {
+        state.fitness_fn = ff;
+    }
 
     if kept {
         state.params = perturbed;
@@ -127,22 +136,33 @@ fn apply_action(
     scale: f64,
     reviewer: &ReviewState,
     result: &mut ExperimentResult,
-) -> f64 {
+) -> (f64, Option<FitnessFunction>) {
     match action {
-        Action::Continue => scale,
+        Action::Continue => (scale, None),
         Action::WidenSearch(s) => {
             result.description = format!("widen: scale={s:.3}");
-            s
+            (s, None)
         }
         Action::Restart => {
             *params = review::random_params();
             result.description = "RESTART: random params".into();
-            reviewer.base_scale()
+            (reviewer.base_scale(), None)
         }
-        Action::SwitchFitness(name) => {
+        Action::SwitchFitness(ref name) => {
+            let ff = parse_fitness_fn(name);
             result.description = format!("SWITCH_FITNESS: {name}");
-            reviewer.base_scale()
+            (reviewer.base_scale(), Some(ff))
         }
+    }
+}
+
+fn parse_fitness_fn(name: &str) -> FitnessFunction {
+    match name {
+        "ImpactAccuracy" => FitnessFunction::ImpactAccuracy,
+        "PropagationDepth" => FitnessFunction::PropagationDepth,
+        "CycleTime" => FitnessFunction::CycleTime,
+        "GraphDensity" => FitnessFunction::GraphDensity,
+        other => FitnessFunction::Custom(other.to_string()),
     }
 }
 
