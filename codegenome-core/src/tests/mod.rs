@@ -9,4 +9,7 @@ mod fusion_tests;
 mod process_tests;
 mod evidence_tests;
 mod governance_tests;
+mod pdg_tests;
+mod runtime_tests;
+mod scip_tests;
 mod experiments;
