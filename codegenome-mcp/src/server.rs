@@ -28,6 +28,11 @@ impl ServerHandler for CodegenomeTools {
             make_tool("codegenome_impact", "Blast radius from a file:line change"),
             make_tool("codegenome_detect_changes", "Map diff to affected symbols"),
             make_tool("codegenome_trace", "Process trace from entrypoint"),
+            make_tool("codegenome_reindex", "Smart re-index (skips if fresh)"),
+            make_tool("codegenome_status", "Index status and freshness report"),
+            make_tool("codegenome_experiment_start", "Start async experiment loop"),
+            make_tool("codegenome_experiment_status", "Poll experiment progress"),
+            make_tool("codegenome_experiment_results", "Read last N experiment results"),
         ];
         std::future::ready(Ok(ListToolsResult {
             tools,
@@ -66,6 +71,26 @@ fn dispatch_tool(tools: &CodegenomeTools, req: &CallToolRequestParams) -> CallTo
         "codegenome_trace" => {
             let ep = arg_str(args, "entrypoint");
             tools.trace(&ep)
+        }
+        "codegenome_reindex" => {
+            let src = arg_str(args, "source_dir");
+            tools.reindex(&src)
+        }
+        "codegenome_status" => {
+            let src = arg_str(args, "source_dir");
+            tools.status_report(&src)
+        }
+        "codegenome_experiment_start" => {
+            let src = arg_str(args, "source_dir");
+            let iters = arg_u32(args, "max_iterations") as u64;
+            tools.experiment_start(&src, iters)
+        }
+        "codegenome_experiment_status" => {
+            tools.experiment_status()
+        }
+        "codegenome_experiment_results" => {
+            let n = arg_u32(args, "last_n") as usize;
+            tools.experiment_results(if n == 0 { 10 } else { n })
         }
         _ => r#"{"error":"unknown tool"}"#.into(),
     };

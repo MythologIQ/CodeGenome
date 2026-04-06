@@ -5,6 +5,7 @@ pub mod experiments;
 pub mod governance;
 pub mod graph;
 pub mod identity;
+pub mod index;
 pub mod measurement;
 pub mod overlay;
 pub mod signal;
