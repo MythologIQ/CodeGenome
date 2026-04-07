@@ -2,6 +2,7 @@ pub mod analyze;
 pub mod experiment;
 pub mod federate;
 pub mod index;
+pub mod init;
 pub mod query;
 pub mod serve;
 pub mod status;

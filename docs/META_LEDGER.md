@@ -2464,3 +2464,50 @@ SHA256(all_artifacts) = 651d23e06ebd5a23b35c38f57fc5dcbaf74f3a52ac04948aabe47bda
 
 **Session Seal**:
 SHA256(content_hash + previous_hash) = ea243a66b623796bdd0b91ae773823c53911bbe99c5e6333e4bbfb113b3ebe08
+
+---
+
+### Entry #97: IMPLEMENTATION — MCP Integration Phases 2-3
+
+**Timestamp**: 2026-04-07T02:00:00Z
+**Phase**: IMPLEMENT
+**Author**: Specialist
+**Type**: IMPLEMENTATION
+
+**Blueprint**: plan-mcp-claude-code-integration.md Phases 2-3 (PASS verdict #94)
+
+**Files Created** (7 new + 4 test):
+- `codegenome-mcp/src/tools/inputs.rs` (90L) — typed input structs with JsonSchema
+- `codegenome-mcp/src/tools/gate.rs` (34L) — write enforcement adapter
+- `codegenome-mcp/src/tests/mod.rs` — test module registration
+- `codegenome-mcp/src/tests/tool_schema_tests.rs` — 5 tests
+- `codegenome-mcp/src/tests/write_enforcement_tests.rs` — 2 tests
+- `codegenome-cli/src/commands/init.rs` (54L) — codegenome init + .mcp.json generation
+- `codegenome-core/src/tests/resolve_integration_tests.rs` — 1 end-to-end test
+
+**Files Modified** (9):
+- `codegenome-mcp/src/tools/mod.rs` — source_dir field, load_with_index, response_meta
+- `codegenome-mcp/src/tools/context.rs` — rewritten: resolve → traverse → format
+- `codegenome-mcp/src/tools/impact.rs` — rewritten: resolve → propagate → format
+- `codegenome-mcp/src/tools/detect.rs` — rewritten: git_bridge instead of raw diff
+- `codegenome-mcp/src/tools/reindex.rs` — added write gate enforcement
+- `codegenome-mcp/src/tools/trace.rs` — rewritten: traversal with relation filter
+- `codegenome-mcp/src/server.rs` — typed schemas, deserialize dispatch
+- `codegenome-mcp/src/lib.rs` — added #[cfg(test)] mod tests
+- `codegenome-mcp/Cargo.toml` — added git2
+- `codegenome-cli/src/commands/serve.rs` — accepts --source + --store
+- `codegenome-cli/src/commands/mod.rs` — registered init
+- `codegenome-cli/src/main.rs` — added Init + Serve source_dir
+
+**Tests Added**: 8 (173 → 181: 174 core + 7 MCP)
+**Section 4 Compliance**: All files ≤250L
+
+**Content Hash**:
+SHA256(all_implementation_artifacts) = 8f020d15afb99dbf62545741fcdf1f46fa82b716d22f95ffe83f8f59c52878f0
+
+**Previous Hash**: ea243a66b623796bdd0b91ae773823c53911bbe99c5e6333e4bbfb113b3ebe08
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = bcfa0dae592947b30c7d3bcda606fc4cd2818dedea0b95289c551d764035115e
+
+**Decision**: Completed MCP Claude Code integration. All 10 tools now use typed input schemas via schemars. Read tools (context, impact, trace) use graph traversal engine with FileIndex resolution. Detect uses git2 bridge. Reindex is write-gated via governance::policy::Decision. Server accepts --source/--store. codegenome init generates .mcp.json for zero-config Claude Code discovery. All responses include provenance metadata.

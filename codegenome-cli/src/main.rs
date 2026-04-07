@@ -40,6 +40,15 @@ enum Commands {
     },
     /// Start MCP tool server (stdio)
     Serve {
+        #[arg(long, default_value = ".")]
+        source_dir: String,
+        #[arg(long, default_value = ".codegenome")]
+        store_dir: String,
+    },
+    /// Initialize .mcp.json for Claude Code integration
+    Init {
+        #[arg(long, default_value = ".")]
+        source_dir: String,
         #[arg(long, default_value = ".codegenome")]
         store_dir: String,
     },
@@ -105,8 +114,17 @@ fn main() {
         Commands::Status { store_dir, json } => {
             commands::status::run(&store_dir, json);
         }
-        Commands::Serve { store_dir } => {
-            commands::serve::run(&store_dir);
+        Commands::Serve {
+            source_dir,
+            store_dir,
+        } => {
+            commands::serve::run(&source_dir, &store_dir);
+        }
+        Commands::Init {
+            source_dir,
+            store_dir,
+        } => {
+            commands::init::run(&source_dir, &store_dir);
         }
         Commands::Verify { log_file } => {
             commands::verify::run(&log_file);

@@ -7,6 +7,7 @@ description = "MCP tool server for the Unified Code Reality Graph"
 [dependencies]
 codegenome-core = { path = "../codegenome-core" }
 rmcp = { version = "0.16", features = ["server", "transport-io", "macros"] }
+git2 = "0.19"
 schemars = "0.8"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }

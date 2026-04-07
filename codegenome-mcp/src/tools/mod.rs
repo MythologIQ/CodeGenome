@@ -1,7 +1,9 @@
 pub mod context;
 pub mod detect;
 pub mod experiment_tool;
+pub mod gate;
 pub mod impact;
+pub mod inputs;
 pub mod reindex;
 pub mod status_tool;
 pub mod trace;
@@ -13,12 +15,14 @@ use std::sync::{Arc, Mutex};
 use codegenome_core::graph::edge::Edge;
 use codegenome_core::graph::node::Node;
 use codegenome_core::graph::overlay::{Overlay, OverlayKind};
+use codegenome_core::graph::resolve::FileIndex;
 use codegenome_core::measurement::GroundTruthLevel;
 use codegenome_core::store::backend::StoreBackend;
 use codegenome_core::store::ondisk::OnDiskStore;
 
 /// Shared server state.
 pub struct CodegenomeTools {
+    pub source_dir: PathBuf,
     pub store_dir: PathBuf,
     pub run_manager: Arc<Mutex<RunManager>>,
 }
@@ -26,6 +30,7 @@ pub struct CodegenomeTools {
 impl Clone for CodegenomeTools {
     fn clone(&self) -> Self {
         Self {
+            source_dir: self.source_dir.clone(),
             store_dir: self.store_dir.clone(),
             run_manager: Arc::clone(&self.run_manager),
         }
@@ -44,10 +49,16 @@ pub struct RunHandle {
 }
 
 impl CodegenomeTools {
-    pub fn new(store_dir: impl Into<PathBuf>) -> Self {
+    pub fn new(
+        source_dir: impl Into<PathBuf>,
+        store_dir: impl Into<PathBuf>,
+    ) -> Self {
         Self {
+            source_dir: source_dir.into(),
             store_dir: store_dir.into(),
-            run_manager: Arc::new(Mutex::new(RunManager { active_run: None })),
+            run_manager: Arc::new(Mutex::new(RunManager {
+                active_run: None,
+            })),
         }
     }
 
@@ -59,14 +70,44 @@ impl CodegenomeTools {
         Some(StoredOverlay { nodes, edges })
     }
 
-    pub fn load_federated_overlay(&self, store_dir: Option<&str>) -> Option<StoredOverlay> {
+    /// Load fused overlay and build a FileIndex for resolution.
+    pub fn load_with_index(
+        &self,
+    ) -> Option<(StoredOverlay, FileIndex)> {
+        let overlay = self.load_overlay()?;
+        let index = FileIndex::build(
+            &self.source_dir,
+            overlay.nodes(),
+            overlay.edges(),
+        );
+        Some((overlay, index))
+    }
+
+    pub fn load_federated_overlay(
+        &self,
+        store_dir: Option<&str>,
+    ) -> Option<StoredOverlay> {
         let root = store_dir
             .filter(|s| !s.is_empty())
             .map(PathBuf::from)
             .unwrap_or_else(|| self.store_dir.clone());
         let store = OnDiskStore::new(root);
-        let (nodes, edges) = store.read_overlay(&OverlayKind::Federated).ok()??;
+        let (nodes, edges) =
+            store.read_overlay(&OverlayKind::Federated).ok()??;
         Some(StoredOverlay { nodes, edges })
+    }
+
+    /// Build provenance metadata for tool responses.
+    pub fn response_meta(&self) -> serde_json::Value {
+        let freshness = codegenome_core::store::meta::check_freshness(
+            &self.store_dir,
+            &self.source_dir,
+        );
+        serde_json::json!({
+            "source_fresh": freshness.is_fresh,
+            "last_indexed": freshness.last_indexed,
+            "toolchain": "tree-sitter-rust + heuristic-resolver",
+        })
     }
 }
 

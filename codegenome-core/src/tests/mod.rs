@@ -1,6 +1,7 @@
 mod confidence_fusion_tests;
 mod detect_changes_signal;
 mod git_bridge_tests;
+mod resolve_integration_tests;
 mod resolve_tests;
 mod write_gate_tests;
 mod index_dynamic_tests;

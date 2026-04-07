@@ -1,30 +1,66 @@
 use codegenome_core::graph::overlay::Overlay;
+use codegenome_core::graph::query::{Direction, Query};
+use codegenome_core::graph::traversal;
+
+use crate::tools::inputs::ContextInput;
 use crate::tools::CodegenomeTools;
 
 impl CodegenomeTools {
-    /// Retrieve context around a file:line location.
-    /// Returns the node + its immediate edge neighbors as JSON.
-    pub fn context(&self, file: &str, line: u32, depth: u32) -> String {
-        let Some(overlay) = self.load_overlay() else {
+    /// Retrieve context around a file:line via graph traversal.
+    pub fn context(&self, input: &ContextInput) -> String {
+        let Some((overlay, index)) = self.load_with_index() else {
             return r#"{"error":"no index found"}"#.into();
         };
-        let target = overlay.nodes.iter().find(|n| {
-            n.span.as_ref().is_some_and(|s| {
-                s.start_line <= line && s.end_line >= line
-            })
-        });
-        let Some(node) = target else {
-            return format!(r#"{{"error":"no symbol at {file}:{line}"}}"#);
+        let Some(addr) = index.resolve(&input.file, input.line)
+        else {
+            return format!(
+                r#"{{"error":"no symbol at {}:{}"}}"#,
+                input.file, input.line
+            );
         };
 
-        let neighbors = overlay.edges_touching(&[node.address]);
-        let result = serde_json::json!({
-            "node": format!("line {}:{}", node.span.as_ref().map_or(0, |s| s.start_line), node.span.as_ref().map_or(0, |s| s.end_line)),
-            "kind": format!("{:?}", node.kind),
-            "confidence": node.confidence,
-            "neighbors": neighbors.len(),
-            "depth": depth,
+        let direction = parse_direction(&input.direction);
+        let query = Query {
+            target: addr,
+            direction,
+            max_depth: input.depth,
+            min_confidence: 0.0,
+            relation_filter: None,
+        };
+        let result = traversal::execute(
+            &query,
+            overlay.nodes(),
+            overlay.edges(),
+        );
+
+        let nodes: Vec<_> = result
+            .nodes
+            .iter()
+            .map(|n| {
+                serde_json::json!({
+                    "kind": format!("{:?}", n.kind),
+                    "confidence": n.confidence,
+                    "provenance": format!("{:?}", n.provenance.source),
+                    "span": n.span.as_ref().map(|s| format!("{}:{}", s.start_line, s.end_line)),
+                })
+            })
+            .collect();
+
+        let mut resp = serde_json::json!({
+            "target": format!("{addr:?}"),
+            "nodes": nodes,
+            "edges": result.edges.len(),
+            "paths": result.paths.len(),
         });
-        serde_json::to_string_pretty(&result).unwrap_or_default()
+        resp["meta"] = self.response_meta();
+        serde_json::to_string_pretty(&resp).unwrap_or_default()
+    }
+}
+
+fn parse_direction(s: &str) -> Direction {
+    match s {
+        "upstream" => Direction::Upstream,
+        "both" => Direction::Both,
+        _ => Direction::Downstream,
     }
 }
