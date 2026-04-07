@@ -1,3 +1,4 @@
+pub mod git_bridge;
 pub mod mapper;
 pub mod propagator;
 mod types;

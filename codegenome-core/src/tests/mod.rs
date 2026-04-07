@@ -1,5 +1,8 @@
 mod confidence_fusion_tests;
 mod detect_changes_signal;
+mod git_bridge_tests;
+mod resolve_tests;
+mod write_gate_tests;
 mod index_dynamic_tests;
 mod index_flow_tests;
 mod index_merger_tests;

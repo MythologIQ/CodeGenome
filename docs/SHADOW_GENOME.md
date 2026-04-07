@@ -165,4 +165,31 @@ When planning code extraction/migration: (1) always sum source line counts befor
 Pending — requires Governor to split oversized modules and add caller migration section.
 
 ---
+
+## Failure #4: Duplicate Domain Type + Missing Test Infrastructure
+
+**Date**: 2026-04-07
+**Ledger Entry**: #93
+**Blueprint**: plan-mcp-claude-code-integration.md (MCP Claude Code Integration)
+**Verdict**: VETO (2 violations)
+
+### What Failed
+
+V1: Plan proposed `WriteGateDecision { Allow, Deny }` in `governance/write_gate.rs` while `governance/policy.rs` already defines `Decision { Allow, Deny, RequireApproval }`. Two decision enums for the same concept in the same governance module.
+
+V2: Plan proposed test files in `codegenome-mcp/src/tests/` but the MCP crate has no test module infrastructure — no `#[cfg(test)] mod tests;` in `lib.rs`, no `tests/mod.rs`. Test files would be orphans.
+
+### Why It Failed
+
+The Governor designed the write gate as a standalone subsystem without checking what types already existed in the same module namespace. Similarly, proposed tests in a crate without verifying the crate had test infrastructure.
+
+### Pattern to Avoid
+
+When adding new types to an existing module: (1) check for existing types with overlapping semantics — reuse before creating. When proposing tests in a crate: (2) verify the crate has `#[cfg(test)]` module registration and include it in the plan if missing.
+
+### Remediation Attempted
+
+Pending — requires Governor to reuse `governance::policy::Decision` and add MCP test module infrastructure to the plan.
+
+---
 _Shadow Genome tracks failure patterns to prevent repetition._

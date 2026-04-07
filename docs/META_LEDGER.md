@@ -2347,3 +2347,91 @@ SHA256(all_artifacts) = f94df363d50e7898cb878b6e9f7b6284787586161bdf56690cd89515
 
 **Session Seal**:
 SHA256(content_hash + previous_hash) = f678071d45d891fa96ec8979ea015a184d5bf1fd3cd257bbd546de31b8b89ab7
+
+---
+
+### Entry #93: GATE TRIBUNAL — VETO
+
+**Timestamp**: 2026-04-07T00:30:00Z
+**Phase**: GATE
+**Author**: Judge
+**Type**: AUDIT_VERDICT
+
+**Target**: MCP Claude Code Integration — Read-Open, Write-Gated (plan-mcp-claude-code-integration.md)
+**Verdict**: VETO
+
+**Violations**:
+- V1: Duplicate decision enum — `WriteGateDecision` duplicates existing `governance::policy::Decision`
+- V2: MCP test files orphaned — no `#[cfg(test)] mod tests;` in `codegenome-mcp/src/lib.rs`
+
+**Content Hash**:
+SHA256(audit_report) = d8ed77cc72219568c2be64d70eb5960e3db8056c38e34cb1ccc2bf8c007f5f86
+
+**Previous Hash**: f678071d45d891fa96ec8979ea015a184d5bf1fd3cd257bbd546de31b8b89ab7
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = c2ce51d4da67353c45f7d68ce70a2cb5040adab28e3539f23e218e6b23b227a6
+
+---
+
+### Entry #94: GATE TRIBUNAL — PASS
+
+**Timestamp**: 2026-04-07T00:50:00Z
+**Phase**: GATE
+**Author**: Judge
+**Type**: AUDIT_VERDICT
+
+**Target**: MCP Claude Code Integration — Read-Open, Write-Gated (Revised)
+**Verdict**: PASS
+
+**Prior VETO Remediation**:
+- V1 (duplicate WriteGateDecision): Removed. write_gate.rs now returns governance::policy::Decision. RESOLVED.
+- V2 (orphan MCP tests): lib.rs gets #[cfg(test)] mod tests;, tests/mod.rs listed as NEW. RESOLVED.
+
+**Audit Passes**: Security PASS, Ghost UI PASS, Section 4 Razor PASS, Dependency PASS, Macro-Level Architecture PASS, Orphan Detection PASS.
+
+**Content Hash**:
+SHA256(audit_report) = 7ba5323c545a836df435f2aa7dc3a12821fbe42c6a5cba4f66e925e533f57756
+
+**Previous Hash**: c2ce51d4da67353c45f7d68ce70a2cb5040adab28e3539f23e218e6b23b227a6
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = 6fbdd1f03d953689a2e4d63351d21779259c3738bf3f53ac1da26e0da88f588d
+
+---
+
+### Entry #95: IMPLEMENTATION — MCP Integration Phase 1 (Core Foundations)
+
+**Timestamp**: 2026-04-07T01:15:00Z
+**Phase**: IMPLEMENT
+**Author**: Specialist
+**Type**: IMPLEMENTATION
+
+**Blueprint**: plan-mcp-claude-code-integration.md Phase 1 (PASS verdict #94)
+
+**Files Created** (3 new + 3 test):
+- `codegenome-core/src/graph/resolve.rs` (111L) — FileIndex + resolve_address
+- `codegenome-core/src/diff/git_bridge.rs` (99L) — git2 → OwnedDiff bridge
+- `codegenome-core/src/governance/write_gate.rs` (57L) — WriteGatePolicy returning Decision
+- `codegenome-core/src/tests/resolve_tests.rs` — 4 tests
+- `codegenome-core/src/tests/git_bridge_tests.rs` — 3 tests
+- `codegenome-core/src/tests/write_gate_tests.rs` — 5 tests
+
+**Files Modified** (4):
+- `codegenome-core/src/graph/mod.rs` — added resolve module
+- `codegenome-core/src/diff/mod.rs` — added git_bridge module
+- `codegenome-core/src/governance/mod.rs` — added write_gate module
+- `codegenome-core/Cargo.toml` — added git2 dependency
+
+**Tests Added**: 12 (161 → 173)
+**Section 4 Compliance**: All files ≤250L
+
+**Content Hash**:
+SHA256(all_implementation_artifacts) = 355dfc953c0f4645ff888d538b530e5ccae2e1ba6b4b536f935fd6e2617650bc
+
+**Previous Hash**: 6fbdd1f03d953689a2e4d63351d21779259c3738bf3f53ac1da26e0da88f588d
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = 83b4379bbadf2bb07d10f31c63071a6c9386a6780d44bea1cd3d28ab25ba5d11
+
+**Decision**: Implemented Phase 1 of MCP Claude Code integration. FileIndex resolves file+line to UorAddress via suffix matching and Contains edge traversal. Git bridge converts git2 diffs to OwnedDiff. WriteGatePolicy evaluates provenance, freshness, and confidence floor, returning existing governance::policy::Decision type. Phase 2 (MCP tool upgrade) and Phase 3 (server config + init) deferred to next session.

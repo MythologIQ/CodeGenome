@@ -2,6 +2,7 @@ pub mod edge;
 pub mod node;
 pub mod overlay;
 pub mod query;
+pub mod resolve;
 pub mod traversal;
 
 pub use edge::{Edge, Relation};
