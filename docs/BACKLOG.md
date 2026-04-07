@@ -52,11 +52,11 @@
 ## Wishlist (Nice to Have)
 - [ ] [W1] IDE panels + code lenses integration
 - [x] [W2] Cross-repository graph federation (v0.18.0 - Complete: explicit workspace federation overlay + CLI/MCP surfaces)
-- [ ] [W3] Embedding-based similarity search (as observer frame, not identity)
+- [x] [W3] Embedding-based similarity search (as observer frame, not identity) (v0.20.0 - Complete: embedding/store + embedding/similarity)
 - [ ] [W4] SLSA supply-chain attestation integration
 - [ ] [W5] Sigstore signing for graph artifacts
-- [ ] [W6] Community/module detection algorithms
-- [ ] [W7] Visualization dashboard for code graph exploration
+- [x] [W6] Community/module detection algorithms (v0.20.0 - Complete: graph/community.rs filtered connected components)
+- [x] [W7] Visualization dashboard for code graph exploration (v0.20.0 - Complete: codegenome visualize + Cytoscape.js)
 
 ---
 _Updated by /qor-* commands automatically_
