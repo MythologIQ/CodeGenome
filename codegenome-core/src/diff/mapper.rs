@@ -38,7 +38,7 @@ pub fn detect_changes(
     }
 }
 
-fn find_changed_nodes(
+pub fn find_changed_nodes(
     diff: &OwnedDiff,
     overlays: &[&dyn Overlay],
 ) -> Vec<UorAddress> {

@@ -1,10 +1,20 @@
+pub mod cache;
+pub mod dynamic;
+pub mod extract;
+pub mod flow;
+pub mod flow_cfg;
+pub mod flow_dfg;
+pub mod merger;
+pub mod orchestrator;
+pub mod parser;
+pub mod resolver;
+
 use std::path::{Path, PathBuf};
 
 use crate::graph::overlay::{Overlay, OverlayKind};
 use crate::overlay::flow::FlowOverlay;
-use crate::overlay::fused;
 use crate::overlay::semantic::SemanticOverlay;
-use crate::overlay::syntax::parse_rust_files;
+use crate::overlay::syntax::SyntaxOverlay;
 use crate::store::backend::StoreBackend;
 use crate::store::meta::{self, IndexMeta};
 use crate::store::ondisk::OnDiskStore;
@@ -39,13 +49,19 @@ pub fn run_pipeline(
     let start = std::time::Instant::now();
     let files = collect_rs_files(source_dir);
     if files.is_empty() {
-        return Err(format!("No Rust source files in {}", source_dir.display()));
+        return Err(format!(
+            "No Rust source files in {}",
+            source_dir.display()
+        ));
     }
 
-    let syntax = parse_rust_files(&files);
-    let semantic = SemanticOverlay::from_syntax(&syntax, &files);
-    let flow = FlowOverlay::from_source(&files);
-    let fused = fused::fuse(&[&syntax, &semantic, &flow]);
+    let parsed = parser::parse_files(&files);
+    let syntax = SyntaxOverlay::from_parsed(&parsed);
+    let resolved = resolver::resolve(&parsed, &files);
+    let semantic = SemanticOverlay::from_resolved(&resolved);
+    let flow_result = flow::extract_flow(&files);
+    let flow_overlay = FlowOverlay::from_flow_result(&flow_result);
+    let fused = merger::fuse(&[&syntax, &semantic, &flow_overlay]);
 
     let store = OnDiskStore::new(store_dir);
     store.write_overlay(
@@ -79,7 +95,9 @@ pub fn run_pipeline(
 
 fn collect_rs_files(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
     let mut files = Vec::new();
-    let Ok(entries) = std::fs::read_dir(dir) else { return files };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return files;
+    };
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {

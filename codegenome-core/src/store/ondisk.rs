@@ -36,10 +36,7 @@ impl StoreBackend for OnDiskStore {
         Ok(())
     }
 
-    fn read_overlay(
-        &self,
-        kind: &OverlayKind,
-    ) -> Result<Option<(Vec<Node>, Vec<Edge>)>, String> {
+    fn read_overlay(&self, kind: &OverlayKind) -> Result<Option<(Vec<Node>, Vec<Edge>)>, String> {
         let dir = self.overlay_dir(kind);
         if !dir.exists() {
             return Ok(None);
@@ -54,8 +51,7 @@ impl StoreBackend for OnDiskStore {
             return Ok(vec![]);
         }
         let mut kinds = Vec::new();
-        let entries = fs::read_dir(&self.root)
-            .map_err(|e| e.to_string())?;
+        let entries = fs::read_dir(&self.root).map_err(|e| e.to_string())?;
         for entry in entries.flatten() {
             if entry.path().is_dir() {
                 let name = entry.file_name().to_string_lossy().into_owned();
@@ -72,6 +68,7 @@ fn overlay_dir_name(kind: &OverlayKind) -> String {
         OverlayKind::Semantic => "semantic".into(),
         OverlayKind::Flow => "flow".into(),
         OverlayKind::Runtime => "runtime".into(),
+        OverlayKind::Federated => "federated".into(),
         OverlayKind::Custom(s) => format!("custom_{s}"),
     }
 }
@@ -82,23 +79,17 @@ fn dir_name_to_kind(name: &str) -> OverlayKind {
         "semantic" => OverlayKind::Semantic,
         "flow" => OverlayKind::Flow,
         "runtime" => OverlayKind::Runtime,
-        s => OverlayKind::Custom(
-            s.strip_prefix("custom_").unwrap_or(s).into(),
-        ),
+        "federated" => OverlayKind::Federated,
+        s => OverlayKind::Custom(s.strip_prefix("custom_").unwrap_or(s).into()),
     }
 }
 
-fn write_bincode<T: serde::Serialize + ?Sized>(
-    path: &Path,
-    data: &T,
-) -> Result<(), String> {
+fn write_bincode<T: serde::Serialize + ?Sized>(path: &Path, data: &T) -> Result<(), String> {
     let bytes = bincode::serialize(data).map_err(|e| e.to_string())?;
     fs::write(path, bytes).map_err(|e| e.to_string())
 }
 
-fn read_bincode<T: serde::de::DeserializeOwned>(
-    path: &Path,
-) -> Result<T, String> {
+fn read_bincode<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, String> {
     let bytes = fs::read(path).map_err(|e| e.to_string())?;
     bincode::deserialize(&bytes).map_err(|e| e.to_string())
 }

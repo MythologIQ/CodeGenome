@@ -17,23 +17,19 @@ pub trait Overlay: Send + Sync {
     fn edges_touching(&self, addresses: &[UorAddress]) -> Vec<&Edge> {
         self.edges()
             .iter()
-            .filter(|e| {
-                addresses.contains(&e.source)
-                    || addresses.contains(&e.target)
-            })
+            .filter(|e| addresses.contains(&e.source) || addresses.contains(&e.target))
             .collect()
     }
 
     fn ground_truth(&self) -> GroundTruthLevel;
 }
 
-#[derive(
-    Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize,
-)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OverlayKind {
     Syntax,
     Semantic,
     Flow,
     Runtime,
+    Federated,
     Custom(String),
 }

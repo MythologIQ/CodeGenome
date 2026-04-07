@@ -1,4 +1,5 @@
 pub mod mapper;
+pub mod propagator;
 mod types;
 
 pub use mapper::detect_changes;

@@ -48,6 +48,13 @@ enum Commands {
         #[arg(long, default_value = "experiments.tsv")]
         log_file: String,
     },
+    /// Analyze repo-local experiment results
+    Analyze {
+        #[arg(long, default_value = "experiments.tsv")]
+        log_file: String,
+        #[arg(long)]
+        json: bool,
+    },
     /// Run autonomous experiment loop
     Experiment {
         #[arg(long, default_value = ".")]
@@ -61,15 +68,38 @@ enum Commands {
         #[arg(long)]
         no_model: bool,
     },
+    /// Build explicit workspace federation overlay
+    Federate {
+        #[arg(long)]
+        workspace_config: String,
+        #[arg(long, default_value = ".codegenome-workspace")]
+        store_dir: String,
+    },
+    /// Report workspace federation metrics
+    WorkspaceReport {
+        #[arg(long, default_value = ".codegenome-workspace")]
+        store_dir: String,
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Index { source_dir, store_dir } => {
+        Commands::Index {
+            source_dir,
+            store_dir,
+        } => {
             commands::index::run(&source_dir, &store_dir);
         }
-        Commands::Query { store_dir, file, line, direction, json } => {
+        Commands::Query {
+            store_dir,
+            file,
+            line,
+            direction,
+            json,
+        } => {
             commands::query::run(&store_dir, &file, line, &direction, json);
         }
         Commands::Status { store_dir, json } => {
@@ -81,11 +111,29 @@ fn main() {
         Commands::Verify { log_file } => {
             commands::verify::run(&log_file);
         }
+        Commands::Analyze { log_file, json } => {
+            commands::analyze::run(&log_file, json);
+        }
         Commands::Experiment {
-            source_dir, log_file, max_iterations, model, no_model,
+            source_dir,
+            log_file,
+            max_iterations,
+            model,
+            no_model,
         } => commands::experiment::run(
-            &source_dir, &log_file, max_iterations,
+            &source_dir,
+            &log_file,
+            max_iterations,
             if no_model { None } else { Some(model) },
         ),
+        Commands::Federate {
+            workspace_config,
+            store_dir,
+        } => {
+            commands::federate::run(&workspace_config, &store_dir);
+        }
+        Commands::WorkspaceReport { store_dir, json } => {
+            commands::workspace_report::run(&store_dir, json);
+        }
     }
 }

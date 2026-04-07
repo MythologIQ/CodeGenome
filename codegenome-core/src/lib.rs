@@ -2,6 +2,7 @@ pub mod confidence;
 pub mod diff;
 pub mod evidence;
 pub mod experiments;
+pub mod federation;
 pub mod governance;
 pub mod graph;
 pub mod identity;

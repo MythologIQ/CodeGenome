@@ -2,11 +2,11 @@ use std::borrow::Cow;
 use std::future::Future;
 use std::sync::Arc;
 
+use crate::tools::CodegenomeTools;
 use rmcp::handler::server::ServerHandler;
 use rmcp::model::*;
 use rmcp::service::RequestContext;
 use rmcp::{ErrorData as McpError, RoleServer, ServiceExt};
-use crate::tools::CodegenomeTools;
 
 /// Start the MCP server on stdio.
 pub async fn run_stdio(store_dir: String) -> Result<(), Box<dyn std::error::Error>> {
@@ -32,7 +32,14 @@ impl ServerHandler for CodegenomeTools {
             make_tool("codegenome_status", "Index status and freshness report"),
             make_tool("codegenome_experiment_start", "Start async experiment loop"),
             make_tool("codegenome_experiment_status", "Poll experiment progress"),
-            make_tool("codegenome_experiment_results", "Read last N experiment results"),
+            make_tool(
+                "codegenome_experiment_results",
+                "Read last N experiment results",
+            ),
+            make_tool(
+                "codegenome_workspace_trace",
+                "Trace explicit cross-repo workspace paths",
+            ),
         ];
         std::future::ready(Ok(ListToolsResult {
             tools,
@@ -85,12 +92,16 @@ fn dispatch_tool(tools: &CodegenomeTools, req: &CallToolRequestParams) -> CallTo
             let iters = arg_u32(args, "max_iterations") as u64;
             tools.experiment_start(&src, iters)
         }
-        "codegenome_experiment_status" => {
-            tools.experiment_status()
-        }
+        "codegenome_experiment_status" => tools.experiment_status(),
         "codegenome_experiment_results" => {
             let n = arg_u32(args, "last_n") as usize;
             tools.experiment_results(if n == 0 { 10 } else { n })
+        }
+        "codegenome_workspace_trace" => {
+            let dir = arg_str(args, "workspace_dir");
+            let from = arg_str(args, "from_repo");
+            let to = arg_str(args, "to_repo");
+            tools.workspace_trace(&dir, &from, &to)
         }
         _ => r#"{"error":"unknown tool"}"#.into(),
     };

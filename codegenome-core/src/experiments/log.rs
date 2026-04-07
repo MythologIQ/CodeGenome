@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
@@ -40,8 +40,11 @@ pub fn log_result(
         .map_err(|e| e.to_string())?;
 
     if needs_header {
-        writeln!(file, "iteration\tfitness\tstability\tcycle_ms\tstatus\tdescription\tchain_hash")
-            .map_err(|e| e.to_string())?;
+        writeln!(
+            file,
+            "iteration\tfitness\tstability\tcycle_ms\tstatus\tparams_json\tdescription\tchain_hash"
+        )
+        .map_err(|e| e.to_string())?;
     }
 
     let row_content = format_row(result);
@@ -78,32 +81,46 @@ fn format_row(result: &ExperimentResult) -> String {
         ExperimentStatus::Fail => "fail",
         ExperimentStatus::Inconclusive => "inconclusive",
     };
+    let params_json = params_json(&result.params).map_err_to_string();
     format!(
-        "{}\t{:.6}\t{:.6}\t{}\t{}\t{}",
-        result.iteration, result.fitness, result.stability,
-        result.cycle_time_ms, status_str, result.description,
+        "{}\t{:.6}\t{:.6}\t{}\t{}\t{}\t{}",
+        result.iteration,
+        result.fitness,
+        result.stability,
+        result.cycle_time_ms,
+        status_str,
+        params_json,
+        result.description,
     )
 }
 
 fn parse_tsv_line(line: &str) -> Result<(ExperimentResult, String, String), String> {
     let parts: Vec<&str> = line.split('\t').collect();
-    if parts.len() < 7 {
-        return Err(format!("TSV row has {} columns, expected 7", parts.len()));
+    if parts.len() < 8 {
+        return Err(format!("TSV row has {} columns, expected 8", parts.len()));
     }
-    let hash = parts[6].to_string();
-    let row_content = parts[..6].join("\t");
+    let hash = parts[7].to_string();
+    let row_content = parts[..7].join("\t");
     let result = ExperimentResult {
-        iteration: parts[0].parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        fitness: parts[1].parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-        stability: parts[2].parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-        cycle_time_ms: parts[3].parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
+        iteration: parts[0]
+            .parse()
+            .map_err(|e: std::num::ParseIntError| e.to_string())?,
+        fitness: parts[1]
+            .parse()
+            .map_err(|e: std::num::ParseFloatError| e.to_string())?,
+        stability: parts[2]
+            .parse()
+            .map_err(|e: std::num::ParseFloatError| e.to_string())?,
+        cycle_time_ms: parts[3]
+            .parse()
+            .map_err(|e: std::num::ParseIntError| e.to_string())?,
         status: match parts[4] {
             "pass" => ExperimentStatus::Pass,
             "fail" => ExperimentStatus::Fail,
             _ => ExperimentStatus::Inconclusive,
         },
-        description: parts[5].to_string(),
-        params: HashMap::new(),
+        params: parse_params(parts[5])?,
+        description: parts[6].to_string(),
         chain_hash: hash.clone(),
     };
     Ok((result, row_content, hash))
@@ -129,11 +146,34 @@ pub fn genesis_hash() -> String {
 
 pub fn last_hash_from_log(path: &Path) -> Result<String, String> {
     let results = read_log(path)?;
-    Ok(results.last().map_or_else(genesis_hash, |r| r.chain_hash.clone()))
+    Ok(results
+        .last()
+        .map_or_else(genesis_hash, |r| r.chain_hash.clone()))
 }
 
 fn file_is_empty(path: &Path) -> bool {
     std::fs::metadata(path)
         .map(|m| m.len() == 0)
         .unwrap_or(true)
+}
+
+fn parse_params(value: &str) -> Result<HashMap<String, f64>, String> {
+    let parsed: BTreeMap<String, f64> =
+        serde_json::from_str(value).map_err(|e| format!("Invalid params_json: {e}"))?;
+    Ok(parsed.into_iter().collect())
+}
+
+fn params_json(params: &HashMap<String, f64>) -> Result<String, serde_json::Error> {
+    let ordered: BTreeMap<String, f64> = params.iter().map(|(k, v)| (k.clone(), *v)).collect();
+    serde_json::to_string(&ordered)
+}
+
+trait MapErrToString<T> {
+    fn map_err_to_string(self) -> T;
+}
+
+impl MapErrToString<String> for Result<String, serde_json::Error> {
+    fn map_err_to_string(self) -> String {
+        self.unwrap_or_else(|_| "{}".into())
+    }
 }

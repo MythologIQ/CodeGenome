@@ -2,6 +2,7 @@ pub mod edge;
 pub mod node;
 pub mod overlay;
 pub mod query;
+pub mod traversal;
 
 pub use edge::{Edge, Relation};
 pub use node::{Node, NodeKind, Provenance, Source, Span, Timestamp};

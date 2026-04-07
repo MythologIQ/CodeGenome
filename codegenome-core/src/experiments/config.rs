@@ -45,7 +45,7 @@ pub enum FitnessFunction {
 }
 
 /// Status of an experiment run.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
 pub enum ExperimentStatus {
     Pass,
     Fail,

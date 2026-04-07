@@ -1,6 +1,9 @@
+pub mod analyze;
 pub mod experiment;
+pub mod federate;
 pub mod index;
 pub mod query;
 pub mod serve;
 pub mod status;
 pub mod verify;
+pub mod workspace_report;

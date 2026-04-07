@@ -5,6 +5,7 @@ pub mod impact;
 pub mod reindex;
 pub mod status_tool;
 pub mod trace;
+pub mod workspace_trace;
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -57,6 +58,16 @@ impl CodegenomeTools {
             .ok()??;
         Some(StoredOverlay { nodes, edges })
     }
+
+    pub fn load_federated_overlay(&self, store_dir: Option<&str>) -> Option<StoredOverlay> {
+        let root = store_dir
+            .filter(|s| !s.is_empty())
+            .map(PathBuf::from)
+            .unwrap_or_else(|| self.store_dir.clone());
+        let store = OnDiskStore::new(root);
+        let (nodes, edges) = store.read_overlay(&OverlayKind::Federated).ok()??;
+        Some(StoredOverlay { nodes, edges })
+    }
 }
 
 /// Wrapper to make stored data implement Overlay trait.
@@ -66,8 +77,16 @@ pub struct StoredOverlay {
 }
 
 impl Overlay for StoredOverlay {
-    fn kind(&self) -> OverlayKind { OverlayKind::Custom("stored".into()) }
-    fn nodes(&self) -> &[Node] { &self.nodes }
-    fn edges(&self) -> &[Edge] { &self.edges }
-    fn ground_truth(&self) -> GroundTruthLevel { GroundTruthLevel::Constructible }
+    fn kind(&self) -> OverlayKind {
+        OverlayKind::Custom("stored".into())
+    }
+    fn nodes(&self) -> &[Node] {
+        &self.nodes
+    }
+    fn edges(&self) -> &[Edge] {
+        &self.edges
+    }
+    fn ground_truth(&self) -> GroundTruthLevel {
+        GroundTruthLevel::Constructible
+    }
 }

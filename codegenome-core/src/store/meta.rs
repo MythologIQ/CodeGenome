@@ -12,6 +12,12 @@ pub struct IndexMeta {
     pub source_hashes: HashMap<String, String>,
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub struct WorkspaceMeta {
+    pub workspace_id: String,
+    pub repositories: Vec<String>,
+}
+
 #[derive(Debug)]
 pub struct FreshnessReport {
     pub is_fresh: bool,
@@ -23,14 +29,31 @@ pub struct FreshnessReport {
 
 pub fn save(store_dir: &Path, meta: &IndexMeta) -> Result<(), String> {
     let path = store_dir.join("meta.json");
-    let json = serde_json::to_string_pretty(meta)
-        .map_err(|e| e.to_string())?;
+    let json = serde_json::to_string_pretty(meta).map_err(|e| e.to_string())?;
     std::fs::write(path, json).map_err(|e| e.to_string())
 }
 
 pub fn load(store_dir: &Path) -> Result<Option<IndexMeta>, String> {
     let path = store_dir.join("meta.json");
-    if !path.exists() { return Ok(None); }
+    if !path.exists() {
+        return Ok(None);
+    }
+    let data = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let meta = serde_json::from_str(&data).map_err(|e| e.to_string())?;
+    Ok(Some(meta))
+}
+
+pub fn save_workspace(store_dir: &Path, meta: &WorkspaceMeta) -> Result<(), String> {
+    let path = store_dir.join("workspace.json");
+    let json = serde_json::to_string_pretty(meta).map_err(|e| e.to_string())?;
+    std::fs::write(path, json).map_err(|e| e.to_string())
+}
+
+pub fn load_workspace(store_dir: &Path) -> Result<Option<WorkspaceMeta>, String> {
+    let path = store_dir.join("workspace.json");
+    if !path.exists() {
+        return Ok(None);
+    }
     let data = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
     let meta = serde_json::from_str(&data).map_err(|e| e.to_string())?;
     Ok(Some(meta))
@@ -39,10 +62,15 @@ pub fn load(store_dir: &Path) -> Result<Option<IndexMeta>, String> {
 pub fn check_freshness(store_dir: &Path, source_dir: &Path) -> FreshnessReport {
     let meta = match load(store_dir) {
         Ok(Some(m)) => m,
-        _ => return FreshnessReport {
-            is_fresh: false, last_indexed: 0,
-            files_changed: 0, files_added: 0, files_removed: 0,
-        },
+        _ => {
+            return FreshnessReport {
+                is_fresh: false,
+                last_indexed: 0,
+                files_changed: 0,
+                files_added: 0,
+                files_removed: 0,
+            }
+        }
     };
 
     let current = hash_source_files(source_dir);
@@ -56,7 +84,9 @@ pub fn check_freshness(store_dir: &Path, source_dir: &Path) -> FreshnessReport {
             _ => {}
         }
     }
-    let removed = meta.source_hashes.keys()
+    let removed = meta
+        .source_hashes
+        .keys()
         .filter(|k| !current.contains_key(k.as_str()))
         .count();
 
@@ -76,7 +106,9 @@ pub fn hash_source_files(dir: &Path) -> HashMap<String, String> {
 }
 
 fn collect_hashes(dir: &Path, hashes: &mut HashMap<String, String>) {
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
