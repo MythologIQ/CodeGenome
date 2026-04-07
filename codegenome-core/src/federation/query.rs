@@ -1,8 +1,8 @@
 use std::collections::{HashMap, VecDeque};
 
 use crate::federation::workspace::WorkspaceGraph;
-use crate::graph::edge::Edge;
-use crate::identity::UorAddress;
+use codegenome_identity::graph::edge::Edge;
+use codegenome_identity::identity::UorAddress;
 
 pub fn trace_between(graph: &WorkspaceGraph, from_repo: &str, to_repo: &str) -> Vec<Edge> {
     let by_name: HashMap<_, _> = graph

@@ -2,12 +2,12 @@ use std::fs;
 
 use crate::federation::config::{RepositoryConfig, WorkspaceConfig};
 use crate::federation::index;
-use crate::graph::edge::{Edge, Relation};
-use crate::graph::node::{Node, NodeKind, Provenance, Timestamp};
-use crate::graph::overlay::OverlayKind;
-use crate::identity::address_of;
-use crate::store::backend::StoreBackend;
-use crate::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::edge::{Edge, Relation};
+use codegenome_identity::graph::node::{Node, NodeKind, Provenance, Timestamp};
+use codegenome_identity::graph::overlay::OverlayKind;
+use codegenome_identity::identity::address_of;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 #[test]
 fn workspace_graph_preserves_membership_and_creates_dependency_edge() {

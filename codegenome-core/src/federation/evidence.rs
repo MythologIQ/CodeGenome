@@ -26,9 +26,9 @@ pub fn dependency_edges(cfg: &WorkspaceConfig) -> Vec<(String, String, String)> 
 }
 
 pub fn identity_edges(
-    repositories: &[(String, Vec<crate::graph::node::Node>)],
+    repositories: &[(String, Vec<codegenome_identity::graph::node::Node>)],
 ) -> Vec<(String, String, String)> {
-    let mut seen: HashMap<crate::identity::UorAddress, Vec<String>> = HashMap::new();
+    let mut seen: HashMap<codegenome_identity::identity::UorAddress, Vec<String>> = HashMap::new();
     for (repo, nodes) in repositories {
         for node in nodes {
             seen.entry(node.address).or_default().push(repo.clone());
@@ -71,8 +71,8 @@ pub fn dependency_pairs(cfg: &WorkspaceConfig) -> Vec<(String, String)> {
 
 /// Resolve symbol-level cross-repo edges using language backends.
 /// Only resolves across declared dependency boundaries.
-pub fn symbol_edges(cfg: &WorkspaceConfig) -> Vec<crate::graph::edge::Edge> {
-    let languages = crate::lang::all_languages();
+pub fn symbol_edges(cfg: &WorkspaceConfig) -> Vec<codegenome_identity::graph::edge::Edge> {
+    let languages = codegenome_identity::lang::all_languages();
     let pairs = dependency_pairs(cfg);
     let mut edges = Vec::new();
 
@@ -99,7 +99,7 @@ pub fn symbol_edges(cfg: &WorkspaceConfig) -> Vec<crate::graph::edge::Edge> {
 }
 
 fn collect_files(dir: &Path) -> Vec<(std::path::PathBuf, Vec<u8>)> {
-    let supported = crate::lang::detect::supported_extensions();
+    let supported = codegenome_identity::lang::detect::supported_extensions();
     let mut files = Vec::new();
     let Ok(entries) = std::fs::read_dir(dir) else { return files };
     for entry in entries.flatten() {

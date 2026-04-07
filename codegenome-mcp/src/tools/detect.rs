@@ -1,6 +1,6 @@
-use codegenome_core::diff::detect_changes;
-use codegenome_core::diff::git_bridge;
-use codegenome_core::graph::overlay::Overlay;
+use codegenome_identity::diff::detect_changes;
+use codegenome_identity::diff::git_bridge;
+use codegenome_identity::graph::overlay::Overlay;
 
 use crate::tools::inputs::DetectInput;
 use crate::tools::CodegenomeTools;
@@ -47,7 +47,7 @@ impl CodegenomeTools {
 
 fn blast_radius_json(
     impact: &std::collections::HashMap<
-        codegenome_core::identity::UorAddress, f64,
+        codegenome_identity::identity::UorAddress, f64,
     >,
     overlay: &crate::tools::StoredOverlay,
 ) -> Vec<serde_json::Value> {

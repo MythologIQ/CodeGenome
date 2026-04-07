@@ -5,7 +5,8 @@ edition = "2021"
 description = "MCP tool server for the Unified Code Reality Graph"
 
 [dependencies]
-codegenome-core = { path = "../codegenome-core" }
+codegenome-identity = { path = "../codegenome-identity" }
+codegenome-substrate = { path = "../codegenome-core" }
 rmcp = { version = "0.16", features = ["server", "transport-io", "macros"] }
 git2 = "0.19"
 schemars = "0.8"

@@ -1,8 +1,8 @@
-use crate::graph::edge::Edge;
-use crate::graph::node::Node;
-use crate::graph::overlay::OverlayKind;
-use crate::store::backend::StoreBackend;
-use crate::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::edge::Edge;
+use codegenome_identity::graph::node::Node;
+use codegenome_identity::graph::overlay::OverlayKind;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 const BELIEF_OVERLAY: &str = "beliefs";
 

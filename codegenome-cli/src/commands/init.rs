@@ -10,7 +10,7 @@ pub fn run(source_dir: &str, store_dir: &str) {
     // Run initial index
     if !store.exists() {
         eprintln!("Indexing {source_dir} -> {store_dir}...");
-        match codegenome_core::index::run_pipeline(src, store) {
+        match codegenome_identity::index::run_pipeline(src, store) {
             Ok(r) => {
                 eprintln!(
                     "Indexed: {} files, {} nodes, {} edges ({}ms)",

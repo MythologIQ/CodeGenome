@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use crate::graph::edge::{Edge, Relation};
-use crate::graph::node::{Provenance, Timestamp};
-use crate::identity::{address_of, UorAddress};
-use crate::lang::LanguageSupport;
+use codegenome_identity::graph::edge::{Edge, Relation};
+use codegenome_identity::graph::node::{Provenance, Timestamp};
+use codegenome_identity::identity::{address_of, UorAddress};
+use codegenome_identity::lang::LanguageSupport;
 
 /// Build an export table: map symbol name → UorAddress.
 /// Extracts top-level symbols from source files using the
@@ -40,7 +40,7 @@ pub fn resolve_cross_repo(
     exporter_exports: &HashMap<String, UorAddress>,
 ) -> Vec<Edge> {
     let prov = Provenance {
-        source: crate::graph::node::Source::Inferred,
+        source: codegenome_identity::graph::node::Source::Inferred,
         actor: "cross-repo-resolver".into(),
         timestamp: Timestamp(0),
         justification: None,

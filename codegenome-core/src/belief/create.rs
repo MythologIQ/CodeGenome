@@ -1,8 +1,8 @@
-use crate::graph::edge::{Edge, Relation};
-use crate::graph::node::{
+use codegenome_identity::graph::edge::{Edge, Relation};
+use codegenome_identity::graph::node::{
     Node, NodeKind, Provenance, Source, Timestamp,
 };
-use crate::identity::{address_of, UorAddress};
+use codegenome_identity::identity::{address_of, UorAddress};
 
 /// A belief claim about a code artifact. Pure value.
 pub struct BeliefSpec {

@@ -1,6 +1,6 @@
 use crate::governance::policy::Decision;
 use crate::governance::write_gate::{WriteGatePolicy, WriteRequest};
-use crate::store::meta::FreshnessReport;
+use codegenome_identity::store::meta::FreshnessReport;
 
 fn fresh_report() -> FreshnessReport {
     FreshnessReport {

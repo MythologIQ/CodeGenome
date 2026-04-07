@@ -1,6 +1,6 @@
-use crate::graph::edge::{Edge, Relation};
-use crate::graph::node::{Node, NodeKind};
-use crate::identity::UorAddress;
+use codegenome_identity::graph::edge::{Edge, Relation};
+use codegenome_identity::graph::node::{Node, NodeKind};
+use codegenome_identity::identity::UorAddress;
 
 /// Find all beliefs about a given subject address.
 /// Returns each belief node paired with its reasoning edges.

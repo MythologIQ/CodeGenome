@@ -1,7 +1,7 @@
 use crate::embedding::similarity::{cosine_similarity, k_nearest};
 use crate::embedding::store::EmbeddingEntry;
-use crate::graph::node::Timestamp;
-use crate::identity::address_of;
+use codegenome_identity::graph::node::Timestamp;
+use codegenome_identity::identity::address_of;
 
 fn entry(name: &str, vec: Vec<f32>) -> EmbeddingEntry {
     EmbeddingEntry {

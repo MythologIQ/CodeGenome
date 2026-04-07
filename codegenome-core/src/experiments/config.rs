@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use crate::graph::overlay::OverlayKind;
+use codegenome_identity::graph::overlay::OverlayKind;
 
 /// Immutable experiment infrastructure.
 /// Like autoresearch's prepare.py — never modified.

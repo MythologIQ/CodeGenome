@@ -1,7 +1,7 @@
-use codegenome_core::graph::overlay::Overlay;
-use codegenome_core::graph::query::{Direction, Query};
-use codegenome_core::graph::query_context::LocalQueryContext;
-use codegenome_core::graph::traversal;
+use codegenome_identity::graph::overlay::Overlay;
+use codegenome_identity::graph::query::{Direction, Query};
+use codegenome_identity::graph::query_context::LocalQueryContext;
+use codegenome_identity::graph::traversal;
 
 use crate::tools::inputs::ContextInput;
 use crate::tools::CodegenomeTools;

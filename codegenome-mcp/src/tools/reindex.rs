@@ -17,7 +17,7 @@ impl CodegenomeTools {
             .to_string();
         }
 
-        match codegenome_core::index::run_pipeline(
+        match codegenome_identity::index::run_pipeline(
             &self.source_dir,
             &self.store_dir,
         ) {

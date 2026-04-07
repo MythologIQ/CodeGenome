@@ -9,7 +9,8 @@ name = "codegenome"
 path = "src/main.rs"
 
 [dependencies]
-codegenome-core = { path = "../codegenome-core" }
+codegenome-identity = { path = "../codegenome-identity" }
+codegenome-substrate = { path = "../codegenome-core" }
 codegenome-mcp = { path = "../codegenome-mcp" }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }

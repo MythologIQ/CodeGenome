@@ -1,13 +1,13 @@
 use crate::federation::config::WorkspaceConfig;
 use crate::federation::evidence;
 use crate::federation::workspace::{RepositoryMember, WorkspaceGraph};
-use crate::graph::edge::{Edge, Relation};
-use crate::graph::node::{Node, NodeKind, Provenance, Timestamp};
-use crate::graph::overlay::OverlayKind;
-use crate::identity::{address_of, UorAddress};
-use crate::store::backend::StoreBackend;
-use crate::store::meta::{self, WorkspaceMeta};
-use crate::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::edge::{Edge, Relation};
+use codegenome_identity::graph::node::{Node, NodeKind, Provenance, Timestamp};
+use codegenome_identity::graph::overlay::OverlayKind;
+use codegenome_identity::identity::{address_of, UorAddress};
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::meta::{self, WorkspaceMeta};
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 pub fn build_workspace(
     cfg: &WorkspaceConfig,

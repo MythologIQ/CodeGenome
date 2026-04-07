@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use codegenome_core::federation::report;
+use codegenome_substrate::federation::report;
 
 pub fn run(store_dir: &str, json: bool) {
     match report::load_report(Path::new(store_dir)) {

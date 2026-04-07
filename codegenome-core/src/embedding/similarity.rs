@@ -1,5 +1,5 @@
 use crate::embedding::store::EmbeddingEntry;
-use crate::identity::UorAddress;
+use codegenome_identity::identity::UorAddress;
 
 /// Find k nearest neighbors to a query address by cosine similarity.
 /// Returns (address, similarity_score) pairs sorted descending.

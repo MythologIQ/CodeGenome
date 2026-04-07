@@ -1,14 +1,14 @@
 use std::path::Path;
 
 use crate::experiments::config::{ExperimentParams, FitnessFunction};
-use crate::graph::edge::Relation;
-use crate::graph::node::NodeKind;
-use crate::graph::overlay::Overlay;
-use crate::identity::UorAddress;
-use crate::overlay::flow::FlowOverlay;
-use crate::overlay::fused::{self, FusedOverlay};
-use crate::overlay::semantic::SemanticOverlay;
-use crate::overlay::syntax::parse_rust_files;
+use codegenome_identity::graph::edge::Relation;
+use codegenome_identity::graph::node::NodeKind;
+use codegenome_identity::graph::overlay::Overlay;
+use codegenome_identity::identity::UorAddress;
+use codegenome_identity::overlay::flow::FlowOverlay;
+use codegenome_identity::overlay::fused::{self, FusedOverlay};
+use codegenome_identity::overlay::semantic::SemanticOverlay;
+use codegenome_identity::overlay::syntax::parse_rust_files;
 
 pub use crate::experiments::fitness_fns;
 
@@ -209,7 +209,7 @@ fn find_siblings(
 
 fn symbols_with_spans(
     overlay: &dyn Overlay,
-) -> Vec<crate::graph::node::Node> {
+) -> Vec<codegenome_identity::graph::node::Node> {
     overlay
         .nodes()
         .iter()

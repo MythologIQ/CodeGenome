@@ -1,12 +1,12 @@
 use crate::federation::query_context::FederatedQueryContext;
-use crate::graph::edge::{Edge, Relation};
-use crate::graph::node::{Node, NodeKind, Provenance, Timestamp};
-use crate::graph::query::Query;
-use crate::graph::query_context::QueryContext;
-use crate::graph::traversal;
-use crate::identity::address_of;
+use codegenome_identity::graph::edge::{Edge, Relation};
+use codegenome_identity::graph::node::{Node, NodeKind, Provenance, Timestamp};
+use codegenome_identity::graph::query::Query;
+use codegenome_identity::graph::query_context::QueryContext;
+use codegenome_identity::graph::traversal;
+use codegenome_identity::identity::address_of;
 
-fn addr(name: &str) -> crate::identity::UorAddress {
+fn addr(name: &str) -> codegenome_identity::identity::UorAddress {
     address_of(name.as_bytes())
 }
 
@@ -70,7 +70,7 @@ fn min_confidence_blocks_cross_repo_bridge() {
     let ctx = FederatedQueryContext::from_parts(nodes, local, cross);
     let q = Query {
         target: addr("A_fn"),
-        direction: crate::graph::query::Direction::Downstream,
+        direction: codegenome_identity::graph::query::Direction::Downstream,
         max_depth: 10,
         min_confidence: 0.8, // 1.0 * 0.7 = 0.7 < 0.8
         relation_filter: None,
@@ -94,7 +94,7 @@ fn upstream_propagates_into_importing_repo() {
     let ctx = FederatedQueryContext::from_parts(nodes, local, cross);
     let q = Query {
         target: addr("B_helper"),
-        direction: crate::graph::query::Direction::Upstream,
+        direction: codegenome_identity::graph::query::Direction::Upstream,
         max_depth: 10,
         min_confidence: 0.0,
         relation_filter: None,

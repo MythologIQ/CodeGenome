@@ -9,15 +9,15 @@ impl CodegenomeTools {
         let Some((start, goal)) = addresses else {
             return r#"{"error":"unknown workspace repositories"}"#.into();
         };
-        let trace = codegenome_core::federation::query::trace_between(
-            &codegenome_core::federation::workspace::WorkspaceGraph {
+        let trace = codegenome_substrate::federation::query::trace_between(
+            &codegenome_substrate::federation::workspace::WorkspaceGraph {
                 workspace_id: "workspace".into(),
                 repositories: vec![
-                    codegenome_core::federation::workspace::RepositoryMember {
+                    codegenome_substrate::federation::workspace::RepositoryMember {
                         name: from_repo.into(),
                         node: start,
                     },
-                    codegenome_core::federation::workspace::RepositoryMember {
+                    codegenome_substrate::federation::workspace::RepositoryMember {
                         name: to_repo.into(),
                         node: goal,
                     },
@@ -34,18 +34,18 @@ impl CodegenomeTools {
 }
 
 fn repo_addresses(
-    nodes: &[codegenome_core::graph::node::Node],
+    nodes: &[codegenome_identity::graph::node::Node],
     from_repo: &str,
     to_repo: &str,
 ) -> Option<(
-    codegenome_core::identity::UorAddress,
-    codegenome_core::identity::UorAddress,
+    codegenome_identity::identity::UorAddress,
+    codegenome_identity::identity::UorAddress,
 )> {
     let start = nodes
         .iter()
-        .find(|n| n.address == codegenome_core::identity::address_of(from_repo.as_bytes()))?;
+        .find(|n| n.address == codegenome_identity::identity::address_of(from_repo.as_bytes()))?;
     let goal = nodes
         .iter()
-        .find(|n| n.address == codegenome_core::identity::address_of(to_repo.as_bytes()))?;
+        .find(|n| n.address == codegenome_identity::identity::address_of(to_repo.as_bytes()))?;
     Some((start.address, goal.address))
 }

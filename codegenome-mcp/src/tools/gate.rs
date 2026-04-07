@@ -1,10 +1,10 @@
 use std::path::Path;
 
-use codegenome_core::governance::policy::Decision;
-use codegenome_core::governance::write_gate::{
+use codegenome_substrate::governance::policy::Decision;
+use codegenome_substrate::governance::write_gate::{
     WriteGatePolicy, WriteRequest,
 };
-use codegenome_core::store::meta;
+use codegenome_identity::store::meta;
 
 /// Check write privilege at the MCP boundary.
 /// Returns Ok(()) if allowed, Err(reason) if denied.

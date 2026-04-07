@@ -1,6 +1,6 @@
-use codegenome_core::store::backend::StoreBackend;
-use codegenome_core::store::meta;
-use codegenome_core::store::ondisk::OnDiskStore;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::meta;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 pub fn run(store_dir: &str, json: bool) {
     show_freshness(store_dir);

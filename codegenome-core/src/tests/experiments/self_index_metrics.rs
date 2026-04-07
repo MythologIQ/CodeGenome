@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use crate::graph::node::NodeKind;
-use crate::graph::overlay::Overlay;
-use crate::overlay::syntax::parse_rust_files;
+use codegenome_identity::graph::node::NodeKind;
+use codegenome_identity::graph::overlay::Overlay;
+use codegenome_identity::overlay::syntax::parse_rust_files;
 
 fn load_all_source() -> Vec<(PathBuf, Vec<u8>)> {
     let src_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src");

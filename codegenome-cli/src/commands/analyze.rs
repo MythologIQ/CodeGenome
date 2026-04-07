@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use codegenome_core::experiments::analysis;
+use codegenome_substrate::experiments::analysis;
 
 pub fn run(log_file: &str, json: bool) {
     match analysis::build_report(Path::new(log_file)) {

@@ -7,7 +7,7 @@ use crate::experiments::runner;
 fn test_infra() -> ExperimentInfra {
     ExperimentInfra {
         source_dir: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
-        overlays: vec![crate::graph::overlay::OverlayKind::Syntax],
+        overlays: vec![codegenome_identity::graph::overlay::OverlayKind::Syntax],
         fitness_fn: FitnessFunction::GraphDensity,
         model_id: None,
     }

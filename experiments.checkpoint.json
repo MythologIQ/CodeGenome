@@ -1,15 +1,15 @@
 {
-  "iteration": 180332,
+  "iteration": 184200,
   "params": {
-    "attenuation_factor": 0.33335964381281025,
-    "confidence_threshold": 0.9371130522202441,
-    "max_depth": 15.828335655524643
+    "attenuation_factor": 0.7147700363429786,
+    "confidence_threshold": 0.4522306472710906,
+    "max_depth": 11.844765343517121
   },
   "fitness_fn": "ImpactAccuracy",
   "best_fitness": 0.8985667752442996,
   "best_stability": 1.0,
-  "scale": 0.1,
-  "plateau_count": 0,
-  "widen_count": 0,
-  "last_chain_hash": "562a229aedc0e612"
+  "scale": 0.4,
+  "plateau_count": 8,
+  "widen_count": 2,
+  "last_chain_hash": "76493c37e1caf57c"
 }

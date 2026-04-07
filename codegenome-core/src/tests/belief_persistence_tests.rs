@@ -1,12 +1,12 @@
 use crate::belief::create::{create_belief, BeliefSpec};
 use crate::belief::store::{load_beliefs, persist_beliefs, try_load_beliefs};
-use crate::graph::node::NodeKind;
-use crate::graph::overlay::OverlayKind;
-use crate::identity::address_of;
-use crate::store::backend::StoreBackend;
-use crate::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::node::NodeKind;
+use codegenome_identity::graph::overlay::OverlayKind;
+use codegenome_identity::identity::address_of;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
-fn addr(name: &str) -> crate::identity::UorAddress {
+fn addr(name: &str) -> codegenome_identity::identity::UorAddress {
     address_of(name.as_bytes())
 }
 

@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::federation::query;
 use crate::federation::workspace::WorkspaceGraph;
-use crate::graph::edge::Edge;
+use codegenome_identity::graph::edge::Edge;
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct DistributionStats {

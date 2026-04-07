@@ -1,9 +1,9 @@
 use std::path::Path;
 
-use codegenome_core::graph::export::to_cytoscape_filtered;
-use codegenome_core::graph::overlay::OverlayKind;
-use codegenome_core::store::backend::StoreBackend;
-use codegenome_core::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::export::to_cytoscape_filtered;
+use codegenome_identity::graph::overlay::OverlayKind;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 const TEMPLATE: &str = include_str!("../../templates/graph.html");
 

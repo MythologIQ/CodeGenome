@@ -2,7 +2,7 @@ use std::fs;
 
 use crate::federation::config::{RepositoryConfig, WorkspaceConfig};
 use crate::federation::{index, query};
-use crate::graph::edge::Relation;
+use codegenome_identity::graph::edge::Relation;
 
 #[test]
 fn workspace_trace_crosses_repo_boundaries_only_through_federated_edges() {

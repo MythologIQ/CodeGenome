@@ -1,4 +1,4 @@
-use codegenome_core::signal::impact::propagate_impact;
+use codegenome_identity::signal::impact::propagate_impact;
 
 use crate::tools::inputs::ImpactInput;
 use crate::tools::CodegenomeTools;
@@ -17,7 +17,7 @@ impl CodegenomeTools {
             );
         };
 
-        let overlays: Vec<&dyn codegenome_core::graph::overlay::Overlay> =
+        let overlays: Vec<&dyn codegenome_identity::graph::overlay::Overlay> =
             vec![&overlay];
         let impact = propagate_impact(&[addr], &overlays);
         let mut results: Vec<_> = impact

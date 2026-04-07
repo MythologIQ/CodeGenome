@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::graph::edge::Edge;
-use crate::graph::node::Node;
-use crate::identity::UorAddress;
+use codegenome_identity::graph::edge::Edge;
+use codegenome_identity::graph::node::Node;
+use codegenome_identity::identity::UorAddress;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RepositoryMember {

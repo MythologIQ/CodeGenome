@@ -1,3 +1,3 @@
 [workspace]
-members = ["codegenome-core", "codegenome-cli", "codegenome-mcp"]
+members = ["codegenome-identity", "codegenome-core", "codegenome-cli", "codegenome-mcp"]
 resolver = "2"

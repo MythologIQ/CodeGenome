@@ -1,9 +1,9 @@
 use crate::belief::create::{create_belief, BeliefSpec};
 use crate::belief::query;
-use crate::graph::node::{Node, NodeKind, Provenance, Timestamp};
-use crate::identity::address_of;
+use codegenome_identity::graph::node::{Node, NodeKind, Provenance, Timestamp};
+use codegenome_identity::identity::address_of;
 
-fn addr(name: &str) -> crate::identity::UorAddress {
+fn addr(name: &str) -> codegenome_identity::identity::UorAddress {
     address_of(name.as_bytes())
 }
 
@@ -20,7 +20,7 @@ fn subject_node() -> Node {
     }
 }
 
-fn make_belief(claim: &str, actor: &str) -> (Node, Vec<crate::graph::edge::Edge>) {
+fn make_belief(claim: &str, actor: &str) -> (Node, Vec<codegenome_identity::graph::edge::Edge>) {
     create_belief(&BeliefSpec {
         claim: claim.into(),
         subject: addr("subject_fn"),

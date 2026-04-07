@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::federation::symbol_resolve::{build_export_table, resolve_cross_repo};
-use crate::graph::edge::Relation;
-use crate::identity::address_of;
-use crate::lang::rust::RustLanguage;
-use crate::lang::LanguageSupport;
+use codegenome_identity::graph::edge::Relation;
+use codegenome_identity::identity::address_of;
+use codegenome_identity::lang::rust::RustLanguage;
+use codegenome_identity::lang::LanguageSupport;
 
 #[test]
 fn cross_repo_import_produces_edge_at_0_7() {
@@ -49,7 +49,7 @@ fn missing_symbol_produces_no_edge() {
 #[test]
 fn empty_export_table_produces_no_edges() {
     let lang = RustLanguage;
-    let exports: HashMap<String, crate::identity::UorAddress> = HashMap::new();
+    let exports: HashMap<String, codegenome_identity::identity::UorAddress> = HashMap::new();
     let importer_files: Vec<(PathBuf, Vec<u8>)> = vec![(
         PathBuf::from("main.rs"),
         b"use crate_b::anything;".to_vec(),

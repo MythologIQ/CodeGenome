@@ -2,8 +2,8 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::graph::node::Timestamp;
-use crate::identity::UorAddress;
+use codegenome_identity::graph::node::Timestamp;
+use codegenome_identity::identity::UorAddress;
 
 /// An embedding vector associated with a UOR address.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -32,7 +32,7 @@ pub fn ingest_from_json(path: &Path) -> Result<Vec<EmbeddingEntry>, String> {
     Ok(raw
         .into_iter()
         .map(|r| EmbeddingEntry {
-            address: crate::identity::address_of(r.address.as_bytes()),
+            address: codegenome_identity::identity::address_of(r.address.as_bytes()),
             vector: r.vector,
             model: r.model,
             timestamp: now,
@@ -42,7 +42,7 @@ pub fn ingest_from_json(path: &Path) -> Result<Vec<EmbeddingEntry>, String> {
 
 /// Persist embeddings to the graph store.
 pub fn persist_embeddings(
-    store: &crate::store::ondisk::OnDiskStore,
+    store: &codegenome_identity::store::ondisk::OnDiskStore,
     entries: &[EmbeddingEntry],
 ) -> Result<(), String> {
     let data = bincode::serialize(entries)
@@ -53,7 +53,7 @@ pub fn persist_embeddings(
 
 /// Load embeddings from the store.
 pub fn load_embeddings(
-    store: &crate::store::ondisk::OnDiskStore,
+    store: &codegenome_identity::store::ondisk::OnDiskStore,
 ) -> Result<Vec<EmbeddingEntry>, String> {
     let path = store.base_dir().join("embeddings.bin");
     if !path.exists() {

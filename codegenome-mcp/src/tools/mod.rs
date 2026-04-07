@@ -13,13 +13,13 @@ pub mod workspace_trace;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use codegenome_core::graph::edge::Edge;
-use codegenome_core::graph::node::Node;
-use codegenome_core::graph::overlay::{Overlay, OverlayKind};
-use codegenome_core::graph::resolve::FileIndex;
-use codegenome_core::measurement::GroundTruthLevel;
-use codegenome_core::store::backend::StoreBackend;
-use codegenome_core::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::edge::Edge;
+use codegenome_identity::graph::node::Node;
+use codegenome_identity::graph::overlay::{Overlay, OverlayKind};
+use codegenome_identity::graph::resolve::FileIndex;
+use codegenome_identity::measurement::GroundTruthLevel;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 /// Shared server state.
 pub struct CodegenomeTools {
@@ -71,7 +71,7 @@ impl CodegenomeTools {
 
         // Merge persisted beliefs into query context
         let (belief_nodes, belief_edges) =
-            codegenome_core::belief::store::try_load_beliefs(&store);
+            codegenome_substrate::belief::store::try_load_beliefs(&store);
         nodes.extend(belief_nodes);
         edges.extend(belief_edges);
 
@@ -107,7 +107,7 @@ impl CodegenomeTools {
 
     /// Build provenance metadata for tool responses.
     pub fn response_meta(&self) -> serde_json::Value {
-        let freshness = codegenome_core::store::meta::check_freshness(
+        let freshness = codegenome_identity::store::meta::check_freshness(
             &self.store_dir,
             &self.source_dir,
         );

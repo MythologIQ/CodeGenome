@@ -2,12 +2,12 @@ use std::path::Path;
 
 use crate::federation::metrics::{self, WorkspaceReport};
 use crate::federation::workspace::WorkspaceGraph;
-use crate::graph::edge::Edge;
-use crate::graph::node::Node;
-use crate::graph::overlay::OverlayKind;
-use crate::store::backend::StoreBackend;
-use crate::store::meta;
-use crate::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::edge::Edge;
+use codegenome_identity::graph::node::Node;
+use codegenome_identity::graph::overlay::OverlayKind;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::meta;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 pub fn load_report(store_dir: &Path) -> Result<WorkspaceReport, String> {
     let graph = load_graph(store_dir)?;

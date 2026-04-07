@@ -1,9 +1,9 @@
-use codegenome_core::graph::edge::Relation;
-use codegenome_core::graph::node::NodeKind;
-use codegenome_core::graph::overlay::Overlay;
-use codegenome_core::graph::query::{Direction, Query};
-use codegenome_core::graph::query_context::LocalQueryContext;
-use codegenome_core::graph::traversal;
+use codegenome_identity::graph::edge::Relation;
+use codegenome_identity::graph::node::NodeKind;
+use codegenome_identity::graph::overlay::Overlay;
+use codegenome_identity::graph::query::{Direction, Query};
+use codegenome_identity::graph::query_context::LocalQueryContext;
+use codegenome_identity::graph::traversal;
 
 use crate::tools::inputs::TraceInput;
 use crate::tools::CodegenomeTools;
@@ -82,8 +82,8 @@ impl CodegenomeTools {
 
 fn try_resolve_entrypoint(
     ep: &str,
-    index: &codegenome_core::graph::resolve::FileIndex,
-) -> Option<codegenome_core::identity::UorAddress> {
+    index: &codegenome_identity::graph::resolve::FileIndex,
+) -> Option<codegenome_identity::identity::UorAddress> {
     // Try "file:line" format
     let parts: Vec<&str> = ep.rsplitn(2, ':').collect();
     if parts.len() == 2 {

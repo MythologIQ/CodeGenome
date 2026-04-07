@@ -1,5 +1,5 @@
 use crate::governance::policy::Decision;
-use crate::store::meta::FreshnessReport;
+use codegenome_identity::store::meta::FreshnessReport;
 
 /// Policy configuration for write privilege evaluation.
 pub struct WriteGatePolicy {

@@ -1,12 +1,12 @@
 use crate::belief::create::{create_belief, BeliefSpec};
-use crate::graph::edge::{Edge, Relation};
-use crate::graph::node::{Node, NodeKind, Provenance, Timestamp};
-use crate::graph::query::{Direction, Query};
-use crate::graph::query_context::LocalQueryContext;
-use crate::graph::traversal;
-use crate::identity::address_of;
+use codegenome_identity::graph::edge::{Edge, Relation};
+use codegenome_identity::graph::node::{Node, NodeKind, Provenance, Timestamp};
+use codegenome_identity::graph::query::{Direction, Query};
+use codegenome_identity::graph::query_context::LocalQueryContext;
+use codegenome_identity::graph::traversal;
+use codegenome_identity::identity::address_of;
 
-fn addr(name: &str) -> crate::identity::UorAddress {
+fn addr(name: &str) -> codegenome_identity::identity::UorAddress {
     address_of(name.as_bytes())
 }
 

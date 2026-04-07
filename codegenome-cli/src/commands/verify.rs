@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use codegenome_core::experiments::log;
+use codegenome_substrate::experiments::log;
 
 pub fn run(log_file: &str) {
     let path = Path::new(log_file);

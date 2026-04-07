@@ -2,8 +2,8 @@ use std::path::Path;
 
 use crate::experiments::config::ExperimentParams;
 use crate::experiments::fitness::{build_overlays, depth_propagate, param_or};
-use crate::graph::node::NodeKind;
-use crate::graph::overlay::Overlay;
+use codegenome_identity::graph::node::NodeKind;
+use codegenome_identity::graph::overlay::Overlay;
 
 /// Average max propagation depth from sampled symbols, normalized.
 pub fn propagation_depth(

@@ -1,9 +1,9 @@
 use crate::belief::create::{create_belief, BeliefSpec};
-use crate::graph::edge::Relation;
-use crate::graph::node::{NodeKind, Source};
-use crate::identity::address_of;
+use codegenome_identity::graph::edge::Relation;
+use codegenome_identity::graph::node::{NodeKind, Source};
+use codegenome_identity::identity::address_of;
 
-fn addr(name: &str) -> crate::identity::UorAddress {
+fn addr(name: &str) -> codegenome_identity::identity::UorAddress {
     address_of(name.as_bytes())
 }
 

@@ -1,8 +1,8 @@
-use codegenome_core::belief::create::{create_belief, BeliefSpec};
-use codegenome_core::belief::store::persist_beliefs;
-use codegenome_core::governance::write_gate::WriteGatePolicy;
-use codegenome_core::store::meta;
-use codegenome_core::store::ondisk::OnDiskStore;
+use codegenome_substrate::belief::create::{create_belief, BeliefSpec};
+use codegenome_substrate::belief::store::persist_beliefs;
+use codegenome_substrate::governance::write_gate::WriteGatePolicy;
+use codegenome_identity::store::meta;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 use crate::tools::inputs::AssertInput;
 use crate::tools::CodegenomeTools;
@@ -27,14 +27,14 @@ impl CodegenomeTools {
         let freshness = meta::check_freshness(
             &self.store_dir, &self.source_dir,
         );
-        let request = codegenome_core::governance::write_gate::WriteRequest {
+        let request = codegenome_substrate::governance::write_gate::WriteRequest {
             actor: input.actor.clone(),
             toolchain_version: "belief-api".into(),
             source_freshness: freshness,
             min_edge_confidence: input.confidence,
         };
         let decision = policy.evaluate(&request);
-        if let codegenome_core::governance::policy::Decision::Deny(reason) = &decision {
+        if let codegenome_substrate::governance::policy::Decision::Deny(reason) = &decision {
             return serde_json::json!({
                 "error": "write denied",
                 "reason": reason,

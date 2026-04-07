@@ -1,7 +1,7 @@
 use std::path::Path;
 
 pub fn run(source_dir: &str, store_dir: &str) {
-    match codegenome_core::index::run_pipeline(
+    match codegenome_identity::index::run_pipeline(
         Path::new(source_dir),
         Path::new(store_dir),
     ) {

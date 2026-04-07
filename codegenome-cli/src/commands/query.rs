@@ -1,10 +1,10 @@
-use codegenome_core::graph::edge::Edge;
-use codegenome_core::graph::node::Node;
-use codegenome_core::graph::overlay::{Overlay, OverlayKind};
-use codegenome_core::measurement::GroundTruthLevel;
-use codegenome_core::signal::impact::propagate_impact;
-use codegenome_core::store::backend::StoreBackend;
-use codegenome_core::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::edge::Edge;
+use codegenome_identity::graph::node::Node;
+use codegenome_identity::graph::overlay::{Overlay, OverlayKind};
+use codegenome_identity::measurement::GroundTruthLevel;
+use codegenome_identity::signal::impact::propagate_impact;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 struct StoredOverlay {
     nodes: Vec<Node>,
@@ -60,7 +60,7 @@ fn find_node_at(
     overlay: &StoredOverlay,
     _file: &str,
     line: u32,
-) -> Option<codegenome_core::identity::UorAddress> {
+) -> Option<codegenome_identity::identity::UorAddress> {
     overlay.nodes.iter().find(|n| {
         n.span.as_ref().is_some_and(|s| {
             s.start_line <= line && s.end_line >= line
@@ -69,7 +69,7 @@ fn find_node_at(
 }
 
 fn print_human(
-    results: &[(&codegenome_core::identity::UorAddress, &f64)],
+    results: &[(&codegenome_identity::identity::UorAddress, &f64)],
     overlay: &StoredOverlay,
 ) {
     for (addr, score) in results.iter().take(20) {
@@ -82,7 +82,7 @@ fn print_human(
 }
 
 fn print_json(
-    results: &[(&codegenome_core::identity::UorAddress, &f64)],
+    results: &[(&codegenome_identity::identity::UorAddress, &f64)],
     overlay: &StoredOverlay,
 ) {
     let items: Vec<_> = results
@@ -98,7 +98,7 @@ fn print_json(
 
 fn node_location(
     overlay: &StoredOverlay,
-    addr: &codegenome_core::identity::UorAddress,
+    addr: &codegenome_identity::identity::UorAddress,
 ) -> String {
     overlay.nodes.iter()
         .find(|n| n.address == *addr)

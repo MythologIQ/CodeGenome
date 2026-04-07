@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use codegenome_core::federation::config;
-use codegenome_core::federation::index;
+use codegenome_substrate::federation::config;
+use codegenome_substrate::federation::index;
 
 pub fn run(workspace_config: &str, store_dir: &str) {
     let cfg = match config::load(Path::new(workspace_config)) {

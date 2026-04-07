@@ -2,9 +2,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use codegenome_core::experiments::config::*;
-use codegenome_core::experiments::runner;
-use codegenome_core::graph::overlay::OverlayKind;
+use codegenome_substrate::experiments::config::*;
+use codegenome_substrate::experiments::runner;
+use codegenome_identity::graph::overlay::OverlayKind;
 
 use crate::tools::{CodegenomeTools, RunHandle};
 

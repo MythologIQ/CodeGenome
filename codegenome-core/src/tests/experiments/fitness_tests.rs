@@ -2,13 +2,13 @@ use std::path::PathBuf;
 
 use crate::experiments::config::ExperimentParams;
 use crate::experiments::fitness;
-use crate::graph::overlay::Overlay;
-use crate::overlay::flow::FlowOverlay;
-use crate::overlay::semantic::SemanticOverlay;
-use crate::overlay::syntax::parse_rust_files;
+use codegenome_identity::graph::overlay::Overlay;
+use codegenome_identity::overlay::flow::FlowOverlay;
+use codegenome_identity::overlay::semantic::SemanticOverlay;
+use codegenome_identity::overlay::syntax::parse_rust_files;
 
 fn src_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src")
+    PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../codegenome-identity")).join("src")
 }
 
 #[test]

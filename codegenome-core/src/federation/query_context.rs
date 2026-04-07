@@ -2,14 +2,14 @@ use std::collections::{HashMap, HashSet};
 
 use crate::federation::config::WorkspaceConfig;
 use crate::federation::workspace::WorkspaceGraph;
-use crate::graph::edge::{Edge, Relation};
-use crate::graph::node::Node;
-use crate::graph::overlay::OverlayKind;
-use crate::graph::query::Direction;
-use crate::graph::query_context::QueryContext;
-use crate::identity::UorAddress;
-use crate::store::backend::StoreBackend;
-use crate::store::ondisk::OnDiskStore;
+use codegenome_identity::graph::edge::{Edge, Relation};
+use codegenome_identity::graph::node::Node;
+use codegenome_identity::graph::overlay::OverlayKind;
+use codegenome_identity::graph::query::Direction;
+use codegenome_identity::graph::query_context::QueryContext;
+use codegenome_identity::identity::UorAddress;
+use codegenome_identity::store::backend::StoreBackend;
+use codegenome_identity::store::ondisk::OnDiskStore;
 
 /// QueryContext that composes repo-local graphs with cross-repo
 /// edges. Queries seamlessly traverse repo boundaries via
