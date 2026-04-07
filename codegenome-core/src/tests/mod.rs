@@ -1,4 +1,6 @@
 mod confidence_fusion_tests;
+mod lang_ir_tests;
+mod lang_rust_tests;
 mod detect_changes_signal;
 mod git_bridge_tests;
 mod resolve_integration_tests;

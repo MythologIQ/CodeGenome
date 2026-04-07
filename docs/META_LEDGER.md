@@ -2537,3 +2537,94 @@ SHA256(all_artifacts) = 4a05482949eba30bd0341dd9e59d6ab2b14f1595ccd3a59ee7eb6449
 
 **Session Seal**:
 SHA256(content_hash + previous_hash) = 55220bef61fd5071b56d047aeadf21aa76f78b2714121cad811fe5c20bead7ac
+
+---
+
+### Entry #99: GATE TRIBUNAL — VETO
+
+**Timestamp**: 2026-04-07T02:45:00Z
+**Phase**: GATE
+**Author**: Judge
+**Type**: AUDIT_VERDICT
+
+**Target**: Multi-Language Support — Rust + TypeScript + Python (plan-multi-language-support.md)
+**Verdict**: VETO
+
+**Violations**:
+- V1: `lang/rust.rs` ~345 lines (limit: 250) — repeats Shadow Genome #3 pattern (file size)
+- V2: 9+ callers of `index/extract.rs`, `index/flow_cfg.rs`, `index/flow_dfg.rs` have no migration path
+
+**Content Hash**:
+SHA256(audit_report) = 8139bb108ffecbe333ef67ddb4f433a7c377cfcddabbbbb6b3ab0354e2ac8b1b
+
+**Previous Hash**: 55220bef61fd5071b56d047aeadf21aa76f78b2714121cad811fe5c20bead7ac
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = fff58480cbb91eea570c2b83ec7d3237d6793ac8824a2ba5ca5c61e25ac18aec
+
+---
+
+### Entry #100: GATE TRIBUNAL — PASS
+
+**Timestamp**: 2026-04-07T03:10:00Z
+**Phase**: GATE
+**Author**: Judge
+**Type**: AUDIT_VERDICT
+
+**Target**: Multi-Language Support — Rust + TypeScript + Python (Revised)
+**Verdict**: PASS
+
+**Prior VETO Remediation**:
+- V1 (rust.rs ~345L): Split into rust.rs (~185L) + rust_flow.rs (~180L). Both under 250. RESOLVED.
+- V2 (missing migration): 9 callers across 7 files enumerated with re-export wrappers. RESOLVED.
+
+**Audit Passes**: Security PASS, Ghost UI PASS, Section 4 Razor PASS, Dependency PASS, Macro-Level Architecture PASS, Orphan Detection PASS.
+
+**Content Hash**:
+SHA256(audit_report) = aed3494a8eb419a3db8549cea331a681c20da97241a838d60d10fbcaee0fff50
+
+**Previous Hash**: fff58480cbb91eea570c2b83ec7d3237d6793ac8824a2ba5ca5c61e25ac18aec
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = 9dce5204cbe705c4a26f12eb53d89f5d91c96cf685108c8aa7495603f133b1f6
+
+---
+
+### Entry #101: IMPLEMENTATION — Multi-Language Phase 1 (Language Abstraction)
+
+**Timestamp**: 2026-04-07T03:30:00Z
+**Phase**: IMPLEMENT
+**Author**: Specialist
+**Type**: IMPLEMENTATION
+
+**Blueprint**: plan-multi-language-support.md Phase 1 (PASS verdict #100)
+
+**Files Created** (6 new + 2 test):
+- `codegenome-core/src/lang/ir.rs` (78L) — shared IR types
+- `codegenome-core/src/lang/mod.rs` (40L) — LanguageSupport trait + registry
+- `codegenome-core/src/lang/detect.rs` (36L) — extension-based language detection
+- `codegenome-core/src/lang/graph_builder.rs` (156L) — IR → Node + Edge builder
+- `codegenome-core/src/lang/rust.rs` (235L) — Rust symbol/import/call/impl extraction
+- `codegenome-core/src/lang/rust_flow.rs` (229L) — Rust CFG + DFG extraction
+- `codegenome-core/src/tests/lang_rust_tests.rs` — 6 tests
+- `codegenome-core/src/tests/lang_ir_tests.rs` — 2 tests
+
+**Files Modified** (5):
+- `codegenome-core/src/lib.rs` — added lang module
+- `codegenome-core/src/index/extract.rs` — re-export wrapper to lang::rust
+- `codegenome-core/src/index/flow_cfg.rs` — re-export wrapper to lang::rust_flow
+- `codegenome-core/src/index/flow_dfg.rs` — re-export wrapper to lang::rust_flow
+- `codegenome-core/src/index/resolver.rs` — updated field name (name → imported_name)
+
+**Tests Added**: 8 (181 → 189 total: 182 core + 7 MCP)
+**Section 4 Compliance**: All files ≤250L (largest: rust.rs 235L, rust_flow.rs 229L)
+
+**Content Hash**:
+SHA256(all_artifacts) = 85c61d68a54c81ae4763c0575d0becff1b4fd2545e3af6a74e2b27fb74ccc97e
+
+**Previous Hash**: 9dce5204cbe705c4a26f12eb53d89f5d91c96cf685108c8aa7495603f133b1f6
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = 0fcc7ff84427a75002c84c156d45bee50851fd4654f94d50f4989eafaceff558
+
+**Decision**: Implemented Phase 1 of multi-language support. LanguageSupport trait abstracts language-specific extraction behind shared IR types. Rust backend split into rust.rs (symbols) + rust_flow.rs (CFG/DFG). Existing index/ modules become re-export wrappers. All 9 callers preserved. Phases 2 (TS+Python backends) and 3 (pipeline wiring) deferred to next session.

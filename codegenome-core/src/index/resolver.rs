@@ -92,7 +92,7 @@ fn resolve_uses(
     edges: &mut Vec<Edge>,
 ) {
     for target in extract_use_targets(source, tree) {
-        if let Some(&addr) = symbols.get(&target.name) {
+        if let Some(&addr) = symbols.get(&target.imported_name) {
             edges.push(Edge {
                 source: file_addr,
                 target: addr,

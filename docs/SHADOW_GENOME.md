@@ -192,4 +192,36 @@ When adding new types to an existing module: (1) check for existing types with o
 Pending — requires Governor to reuse `governance::policy::Decision` and add MCP test module infrastructure to the plan.
 
 ---
+
+## Failure #5: File Size + Missing Migration (REPEAT of #3)
+
+**Date**: 2026-04-07
+**Ledger Entry**: #99
+**Blueprint**: plan-multi-language-support.md (Multi-Language Support)
+**Verdict**: VETO (2 violations)
+**Repeat**: Shadow Genome #3 pattern (file size violation + missing caller migration)
+
+### What Failed
+
+V1: `lang/rust.rs` claims ~200 lines but absorbs extract.rs (204L) + flow_cfg.rs (188L) + flow_dfg.rs (100L) = 492L source. Even factoring out IR types, function bodies total ~345L.
+
+V2: Plan says logic "moves from" index/extract.rs, index/flow_cfg.rs, index/flow_dfg.rs but doesn't specify what happens to these modules or their 9+ callers.
+
+### Why It Failed
+
+Same root cause as Failure #3: the Governor did not sum source lines before proposing merges, and did not grep callers before proposing moves. This is a **repeat failure** despite the pattern being documented.
+
+### Pattern to Avoid
+
+MANDATORY before any plan that moves code between modules:
+1. `wc -l` every source file involved
+2. Sum and verify against 250-line limit
+3. `grep` every moved function/module for callers
+4. List every caller and its migration path in the plan
+
+### Remediation Attempted
+
+Pending — requires Governor to split rust.rs and add migration section.
+
+---
 _Shadow Genome tracks failure patterns to prevent repetition._
