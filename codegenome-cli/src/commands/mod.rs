@@ -7,4 +7,5 @@ pub mod query;
 pub mod serve;
 pub mod status;
 pub mod verify;
+pub mod visualize;
 pub mod workspace_report;

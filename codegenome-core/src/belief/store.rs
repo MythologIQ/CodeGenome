@@ -33,3 +33,11 @@ pub fn load_beliefs(
         .read_overlay(&OverlayKind::Custom(BELIEF_OVERLAY.into()))?
         .ok_or_else(|| "No belief overlay found".into())
 }
+
+/// Load beliefs if they exist, return empty if not.
+/// Non-failing: always returns a valid tuple.
+pub fn try_load_beliefs(
+    store: &OnDiskStore,
+) -> (Vec<Node>, Vec<Edge>) {
+    load_beliefs(store).unwrap_or_default()
+}

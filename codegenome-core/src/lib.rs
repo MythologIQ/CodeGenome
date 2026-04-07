@@ -1,5 +1,6 @@
 pub mod belief;
 pub mod confidence;
+pub mod embedding;
 pub mod diff;
 pub mod lang;
 pub mod evidence;

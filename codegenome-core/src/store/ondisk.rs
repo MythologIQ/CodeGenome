@@ -17,6 +17,10 @@ impl OnDiskStore {
         Self { root: root.into() }
     }
 
+    pub fn base_dir(&self) -> &Path {
+        &self.root
+    }
+
     fn overlay_dir(&self, kind: &OverlayKind) -> PathBuf {
         self.root.join(overlay_dir_name(kind))
     }

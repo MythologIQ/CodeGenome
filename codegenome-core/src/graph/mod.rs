@@ -1,4 +1,6 @@
+pub mod community;
 pub mod edge;
+pub mod export;
 pub mod node;
 pub mod overlay;
 pub mod query;

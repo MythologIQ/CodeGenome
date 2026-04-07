@@ -1,6 +1,8 @@
 mod belief_create_tests;
+mod belief_persistence_tests;
 mod belief_query_tests;
 mod belief_traversal_tests;
+mod community_tests;
 mod confidence_fusion_tests;
 mod lang_ir_tests;
 mod lang_python_tests;
@@ -9,6 +11,8 @@ mod lang_typescript_tests;
 mod multi_lang_pipeline_tests;
 mod query_context_tests;
 mod detect_changes_signal;
+mod embedding_tests;
+mod graph_export_tests;
 mod git_bridge_tests;
 mod resolve_integration_tests;
 mod resolve_tests;

@@ -65,9 +65,16 @@ impl CodegenomeTools {
 
     pub fn load_overlay(&self) -> Option<StoredOverlay> {
         let store = OnDiskStore::new(&self.store_dir);
-        let (nodes, edges) = store
+        let (mut nodes, mut edges) = store
             .read_overlay(&OverlayKind::Custom("fused".into()))
             .ok()??;
+
+        // Merge persisted beliefs into query context
+        let (belief_nodes, belief_edges) =
+            codegenome_core::belief::store::try_load_beliefs(&store);
+        nodes.extend(belief_nodes);
+        edges.extend(belief_edges);
+
         Some(StoredOverlay { nodes, edges })
     }
 

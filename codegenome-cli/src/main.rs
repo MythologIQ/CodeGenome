@@ -84,6 +84,15 @@ enum Commands {
         #[arg(long, default_value = ".codegenome-workspace")]
         store_dir: String,
     },
+    /// Export graph as interactive HTML visualization
+    Visualize {
+        #[arg(long, default_value = ".codegenome")]
+        store_dir: String,
+        #[arg(long, default_value = "graph.html")]
+        output: String,
+        #[arg(long, default_value_t = 0.0)]
+        min_confidence: f64,
+    },
     /// Report workspace federation metrics
     WorkspaceReport {
         #[arg(long, default_value = ".codegenome-workspace")]
@@ -149,6 +158,13 @@ fn main() {
             store_dir,
         } => {
             commands::federate::run(&workspace_config, &store_dir);
+        }
+        Commands::Visualize {
+            store_dir,
+            output,
+            min_confidence,
+        } => {
+            commands::visualize::run(&store_dir, &output, min_confidence);
         }
         Commands::WorkspaceReport { store_dir, json } => {
             commands::workspace_report::run(&store_dir, json);

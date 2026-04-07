@@ -2890,3 +2890,104 @@ SHA256(all_source_files) = af8fe0445d6dd7da499ac107e8579581a862b95c612400d725f1c
 SHA256(source_seal + previous_chain) = 8944a2e34a40719120bde52fa25698d6ec41ad8aa06dd106f2f0523f867b42ec
 
 **Verdict**: SUBSTANTIATED. Reality = Promise. Session sealed.
+
+---
+
+### Entry #110: GATE TRIBUNAL — Exploratory Features Plan
+
+**Timestamp**: 2026-04-07T21:00:00Z
+**Actor**: The QoreLogic Judge
+**Operation**: GATE
+**Target**: plan-exploratory-features.md
+**Risk Grade**: L2
+
+**Audit Passes**: Security (CLEAR), Ghost UI (CLEAR), Simplicity Razor (CLEAR), Dependency (CLEAR), Macro-Level Architecture (CLEAR), Build Path (CLEAR)
+
+**Content Hash**:
+SHA256(all_artifacts) = e68684bcb4b063e14eb5b7afc6fc2f6b328ba5bdb68572916b1023b0f9e3009d
+
+**Previous Hash**: 8944a2e34a40719120bde52fa25698d6ec41ad8aa06dd106f2f0523f867b42ec
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = 19657b61371ab39f0a60a1bd3c0402eb7d7fc82d2d35f8592f004ca43a1b924b
+
+**Decision**: PASS. Exploratory features plan approved at L2 (read-only capabilities, no new security surfaces). Four phases: visualization (Cytoscape.js HTML export), embedding similarity (external ingestion + cosine k-NN), community detection (filtered connected components), persistent memory (belief auto-load). Zero new Rust dependencies.
+
+---
+
+### Entry #111: IMPLEMENTATION — Exploratory Features (Phases 1-4)
+
+**Timestamp**: 2026-04-07T22:00:00Z
+**Actor**: The QoreLogic Specialist
+**Operation**: IMPLEMENT
+**Target**: plan-exploratory-features.md — All 4 Phases
+
+**Files Created** (10):
+- `codegenome-core/src/graph/export.rs` — Cytoscape.js JSON serialization (63L)
+- `codegenome-core/src/graph/community.rs` — Filtered connected components via union-find (100L)
+- `codegenome-core/src/embedding/mod.rs` — Module declarations (3L)
+- `codegenome-core/src/embedding/store.rs` — Embedding ingestion + persistence (72L)
+- `codegenome-core/src/embedding/similarity.rs` — Cosine similarity + k-NN (42L)
+- `codegenome-cli/src/commands/visualize.rs` — CLI visualize command (44L)
+- `codegenome-cli/templates/graph.html` — Cytoscape.js HTML template
+- `codegenome-core/src/tests/graph_export_tests.rs` — 4 tests
+- `codegenome-core/src/tests/embedding_tests.rs` — 5 tests
+- `codegenome-core/src/tests/community_tests.rs` — 5 tests
+- `codegenome-core/src/tests/belief_persistence_tests.rs` — 3 tests
+
+**Files Modified** (8):
+- `codegenome-core/src/graph/mod.rs` — registered export + community modules
+- `codegenome-core/src/lib.rs` — registered embedding module
+- `codegenome-core/src/store/ondisk.rs` — added base_dir() accessor
+- `codegenome-core/src/belief/store.rs` — added try_load_beliefs()
+- `codegenome-mcp/src/tools/mod.rs` — load_overlay merges beliefs into query context
+- `codegenome-cli/src/commands/mod.rs` — registered visualize
+- `codegenome-cli/src/main.rs` — added Visualize subcommand
+- `codegenome-core/src/tests/mod.rs` — registered 4 new test modules
+
+**Tests Added**: 17 (224 → 241 total)
+**Tests Passing**: 241/241 (1 pre-existing flaky timing test intermittent)
+**Section 4 Compliance**: All files ≤250L (largest: community.rs 100L)
+
+**Content Hash**:
+SHA256(all_artifacts) = 491f0e390d7391423c0cf9ebb9e7bada6fc21f756473fbb3a77ec4090c0f1343
+
+**Previous Hash**: 19657b61371ab39f0a60a1bd3c0402eb7d7fc82d2d35f8592f004ca43a1b924b
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = ffc828661f3756052aa0dd9cb7f9fca30979e662ffe6a4bebca1a0b06f287754
+
+**Decision**: Exploratory features complete. Visualization: `codegenome visualize` exports standalone HTML with Cytoscape.js rendering. Embeddings: external ingestion + cosine k-NN similarity search as observer frame. Communities: filtered connected components via union-find over Calls/Imports edges. Persistent memory: beliefs auto-load into query context on overlay load, surviving reindexing. CLI commands: 7 (was 6).
+
+---
+
+### Entry #112: SESSION SEAL — Session 4 (Extended)
+
+**Timestamp**: 2026-04-07T23:00:00Z
+**Actor**: The QoreLogic Judge
+**Operation**: SUBSTANTIATE
+**Session**: 4 (extended)
+
+**Additional Deliverables (post-initial-seal)**:
+6. Reasoning artifact schema: Beliefs as graph nodes with 3 new relation types
+7. Near-term wiring: B7 impact propagation, MCP assert tool, federation symbol edges
+8. Exploratory features: visualization, embeddings, communities, persistent memory
+
+**Governance Entries This Session**: #102–#112 (11 entries)
+**Plans Created**: 6
+**Audits Passed**: 6 (all PASS, zero VETOs)
+**Tests**: 189 → 241 (52 new, zero regressions from code changes)
+**MCP Tools**: 10 → 11
+**CLI Commands**: 6 → 7
+**Edge Types**: 12 → 15
+**Modules Added**: belief/, embedding/, graph/export, graph/community, graph/query_context, federation/query_context, federation/symbol_resolve, lang/typescript*, lang/python*, index/resolver_multi
+
+**Source Seal**:
+SHA256(all_source_files) = 6c326f463a7058eb2a599ed1a6472782d87d75b06c9b20a92e5d0ed4eeb373f9
+
+**Previous Chain Hash**: ffc828661f3756052aa0dd9cb7f9fca30979e662ffe6a4bebca1a0b06f287754
+
+**Session Seal**:
+SHA256(source_seal + previous_chain) = dfbf50734038a088141308746d56dc463ec52a5fb739d2e5b716fec2c19bf9a9
+
+**Verdict**: SUBSTANTIATED. Reality = Promise. Session sealed.

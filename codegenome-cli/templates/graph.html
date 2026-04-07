@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CODEGENOME Graph</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; }
+  #cy { width: 100%; height: 80vh; }
+  #info { padding: 12px 16px; background: #16213e; min-height: 20vh; overflow-y: auto; }
+  #info h3 { color: #0f3460; margin-bottom: 8px; }
+  .stat { display: inline-block; margin-right: 24px; color: #999; font-size: 13px; }
+  pre { white-space: pre-wrap; font-size: 12px; color: #ccc; }
+</style>
+</head>
+<body>
+<div id="cy"></div>
+<div id="info">
+  <span class="stat" id="stats"></span>
+  <pre id="detail">Click a node or edge to inspect.</pre>
+</div>
+<script>
+const data = {{GRAPH_DATA}};
+const kindColors = {
+  File: '#888', Symbol: '#4a90d9', Belief: '#d4a017',
+  Process: '#27ae60', Scope: '#8e44ad',
+};
+function confColor(c) {
+  if (c >= 0.8) return '#27ae60';
+  if (c >= 0.5) return '#f39c12';
+  return '#e74c3c';
+}
+const elements = [];
+data.nodes.forEach(n => {
+  elements.push({
+    group: 'nodes',
+    data: n.data,
+    style: { 'background-color': kindColors[n.data.kind] || '#555' }
+  });
+});
+data.edges.forEach(e => {
+  elements.push({
+    group: 'edges',
+    data: { ...e.data, id: e.data.source + '-' + e.data.target + '-' + e.data.relation },
+    style: { 'line-color': confColor(e.data.confidence) }
+  });
+});
+document.getElementById('stats').textContent =
+  data.nodes.length + ' nodes, ' + data.edges.length + ' edges';
+const cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements: elements,
+  style: [
+    { selector: 'node', style: {
+      label: 'data(label)', 'font-size': 10, color: '#ccc',
+      'text-valign': 'bottom', 'text-margin-y': 4, width: 16, height: 16,
+    }},
+    { selector: 'edge', style: {
+      width: 1.5, 'curve-style': 'bezier',
+      'target-arrow-shape': 'triangle', 'arrow-scale': 0.6,
+    }},
+  ],
+  layout: { name: 'cose', animate: false, nodeRepulsion: 8000, idealEdgeLength: 80 },
+});
+cy.on('tap', 'node', e => {
+  document.getElementById('detail').textContent = JSON.stringify(e.target.data(), null, 2);
+});
+cy.on('tap', 'edge', e => {
+  document.getElementById('detail').textContent = JSON.stringify(e.target.data(), null, 2);
+});
+</script>
+</body>
+</html>
