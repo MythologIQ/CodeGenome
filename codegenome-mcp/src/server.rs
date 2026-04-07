@@ -71,6 +71,10 @@ impl ServerHandler for CodegenomeTools {
                 "codegenome_workspace_trace",
                 "Trace cross-repo workspace paths",
             ),
+            typed_tool::<AssertInput>(
+                "codegenome_assert",
+                "Write-gated: assert a belief about a code artifact",
+            ),
         ];
         std::future::ready(Ok(ListToolsResult {
             tools,
@@ -142,6 +146,10 @@ fn dispatch_tool(
                 &input.from_repo,
                 &input.to_repo,
             )
+        }
+        "codegenome_assert" => {
+            let input: AssertInput = deser(req);
+            tools.assert_belief(&input)
         }
         _ => r#"{"error":"unknown tool"}"#.into(),
     };

@@ -200,3 +200,6 @@ fn file_address(path: &std::path::Path) -> UorAddress {
     let content = format!("file:{}", path.display());
     address_of(content.as_bytes())
 }
+
+// Multi-language resolve is in resolver_multi.rs
+pub use super::resolver_multi::resolve_multi;

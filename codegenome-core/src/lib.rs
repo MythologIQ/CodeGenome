@@ -1,3 +1,4 @@
+pub mod belief;
 pub mod confidence;
 pub mod diff;
 pub mod lang;

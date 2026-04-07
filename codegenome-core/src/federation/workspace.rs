@@ -16,4 +16,7 @@ pub struct WorkspaceGraph {
     pub repositories: Vec<RepositoryMember>,
     pub aggregate_nodes: Vec<Node>,
     pub federated_edges: Vec<Edge>,
+    /// Symbol-level cross-repo edges (confidence 0.7 for name-resolved,
+    /// 1.0 for identity matches). Separate from repo-level edges.
+    pub symbol_edges: Vec<Edge>,
 }

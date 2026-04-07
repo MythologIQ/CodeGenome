@@ -36,16 +36,19 @@ pub fn run(config: &PipelineConfig) -> Result<IndexResult, String> {
     }
 
     let start = std::time::Instant::now();
-    let files = collect_rs_files(&config.source_dir);
+    let files = collect_source_files(&config.source_dir);
     if files.is_empty() {
         return Err(format!(
-            "No Rust source files in {}",
+            "No source files in {}",
             config.source_dir.display()
         ));
     }
 
-    // Stage 1: Parse (incremental via cache)
-    let parsed = parse_with_cache(&files, &config.store_dir);
+    let languages = crate::lang::all_languages();
+    let groups = crate::lang::detect::group_by_language(&files);
+
+    // Stage 1: Parse (incremental via cache for Rust, fresh for others)
+    let parsed = parse_with_cache_multi(&files, &languages, &config.store_dir);
 
     // Stage 2: Build syntax overlay (needed before fan-out)
     let syntax = SyntaxOverlay::from_parsed(&parsed);
@@ -58,15 +61,21 @@ pub fn run(config: &PipelineConfig) -> Result<IndexResult, String> {
     let trace = config.trace_path.clone();
     let files_ref = &files;
     let parsed_ref = &parsed;
+    let groups_ref = &groups;
+    let langs_ref = &languages;
 
     rayon::scope(|s| {
         s.spawn(|_| {
-            let resolved = resolver::resolve(parsed_ref, files_ref);
+            let resolved = resolver::resolve_multi(
+                parsed_ref, groups_ref, langs_ref,
+            );
             *semantic.lock().unwrap() =
                 Some(SemanticOverlay::from_resolved(&resolved));
         });
         s.spawn(|_| {
-            let result = flow::extract_flow(files_ref);
+            let result = flow::extract_flow_multi(
+                groups_ref, langs_ref,
+            );
             *flow_overlay.lock().unwrap() =
                 Some(FlowOverlay::from_flow_result(&result));
         });
@@ -125,14 +134,15 @@ pub fn run(config: &PipelineConfig) -> Result<IndexResult, String> {
     })
 }
 
-fn parse_with_cache(
+fn parse_with_cache_multi(
     files: &[(PathBuf, Vec<u8>)],
+    languages: &[Box<dyn crate::lang::LanguageSupport>],
     store_dir: &Path,
 ) -> Vec<parser::ParsedFile> {
     let cache = FileCache::new(store_dir);
     let mut parsed = Vec::with_capacity(files.len());
+    let mut dirty: Vec<(PathBuf, Vec<u8>, String)> = Vec::new();
 
-    let mut dirty = Vec::new();
     for (path, source) in files {
         let hash = blake3::hash(source).to_hex()[..16].to_string();
         if let Some(entry) = cache.get(path, &hash) {
@@ -160,10 +170,18 @@ fn parse_with_cache(
     if !dirty.is_empty() {
         let dirty_files: Vec<_> =
             dirty.iter().map(|(p, s, _)| (p.clone(), s.clone())).collect();
-        let fresh = parser::parse_files(&dirty_files);
-        for (pf, (_, _, hash)) in fresh.into_iter().zip(&dirty) {
+        let dirty_groups =
+            crate::lang::detect::group_by_language(&dirty_files);
+        let fresh =
+            parser::parse_files_multi(&dirty_groups, languages);
+        for pf in fresh {
+            let hash = dirty
+                .iter()
+                .find(|(p, _, _)| *p == pf.path)
+                .map(|(_, _, h)| h.clone())
+                .unwrap_or_default();
             let entry = CachedEntry {
-                content_hash: hash.clone(),
+                content_hash: hash,
                 nodes_bin: bincode::serialize(&pf.nodes)
                     .unwrap_or_default(),
                 edges_bin: bincode::serialize(&pf.edges)
@@ -177,7 +195,8 @@ fn parse_with_cache(
     parsed
 }
 
-fn collect_rs_files(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
+fn collect_source_files(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
+    let supported = crate::lang::detect::supported_extensions();
     let mut files = Vec::new();
     let Ok(entries) = std::fs::read_dir(dir) else {
         return files;
@@ -185,8 +204,12 @@ fn collect_rs_files(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
-            files.extend(collect_rs_files(&path));
-        } else if path.extension().is_some_and(|e| e == "rs") {
+            files.extend(collect_source_files(&path));
+        } else if path
+            .extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| supported.contains(&e))
+        {
             if let Ok(content) = std::fs::read(&path) {
                 files.push((path, content));
             }

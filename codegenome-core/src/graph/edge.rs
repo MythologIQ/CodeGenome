@@ -33,4 +33,8 @@ pub enum Relation {
     ControlDependence,
     DataFlow,
     Dominates,
+    // Reasoning edges (belief → graph artifact)
+    AboutSubject,
+    Supports,
+    Contradicts,
 }

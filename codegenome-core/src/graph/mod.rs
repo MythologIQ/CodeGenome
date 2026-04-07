@@ -2,6 +2,7 @@ pub mod edge;
 pub mod node;
 pub mod overlay;
 pub mod query;
+pub mod query_context;
 pub mod resolve;
 pub mod traversal;
 

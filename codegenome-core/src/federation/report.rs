@@ -31,6 +31,7 @@ fn load_graph(store_dir: &Path) -> Result<WorkspaceGraph, String> {
             .collect(),
         aggregate_nodes: nodes,
         federated_edges: edges,
+        symbol_edges: Vec::new(),
     })
 }
 

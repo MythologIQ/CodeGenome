@@ -1,8 +1,12 @@
 pub mod detect;
 pub mod graph_builder;
 pub mod ir;
+pub mod python;
+pub mod python_flow;
 pub mod rust;
 pub mod rust_flow;
+pub mod typescript;
+pub mod typescript_flow;
 
 use ir::*;
 
@@ -36,5 +40,10 @@ pub trait LanguageSupport: Send + Sync {
 
 /// All built-in language backends.
 pub fn all_languages() -> Vec<Box<dyn LanguageSupport>> {
-    vec![Box::new(rust::RustLanguage)]
+    vec![
+        Box::new(rust::RustLanguage),
+        Box::new(typescript::TypeScriptLanguage::ts()),
+        Box::new(typescript::TypeScriptLanguage::tsx()),
+        Box::new(python::PythonLanguage),
+    ]
 }

@@ -8,6 +8,7 @@ pub mod merger;
 pub mod orchestrator;
 pub mod parser;
 pub mod resolver;
+pub mod resolver_multi;
 
 use std::path::{Path, PathBuf};
 
@@ -47,19 +48,21 @@ pub fn run_pipeline(
     }
 
     let start = std::time::Instant::now();
-    let files = collect_rs_files(source_dir);
+    let files = collect_source_files(source_dir);
     if files.is_empty() {
         return Err(format!(
-            "No Rust source files in {}",
+            "No source files in {}",
             source_dir.display()
         ));
     }
 
-    let parsed = parser::parse_files(&files);
+    let languages = crate::lang::all_languages();
+    let groups = crate::lang::detect::group_by_language(&files);
+    let parsed = parser::parse_files_multi(&groups, &languages);
     let syntax = SyntaxOverlay::from_parsed(&parsed);
-    let resolved = resolver::resolve(&parsed, &files);
+    let resolved = resolver::resolve_multi(&parsed, &groups, &languages);
     let semantic = SemanticOverlay::from_resolved(&resolved);
-    let flow_result = flow::extract_flow(&files);
+    let flow_result = flow::extract_flow_multi(&groups, &languages);
     let flow_overlay = FlowOverlay::from_flow_result(&flow_result);
     let fused = merger::fuse(&[&syntax, &semantic, &flow_overlay]);
 
@@ -93,7 +96,8 @@ pub fn run_pipeline(
     })
 }
 
-fn collect_rs_files(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
+fn collect_source_files(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
+    let supported = crate::lang::detect::supported_extensions();
     let mut files = Vec::new();
     let Ok(entries) = std::fs::read_dir(dir) else {
         return files;
@@ -101,8 +105,12 @@ fn collect_rs_files(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
-            files.extend(collect_rs_files(&path));
-        } else if path.extension().is_some_and(|e| e == "rs") {
+            files.extend(collect_source_files(&path));
+        } else if path
+            .extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| supported.contains(&e))
+        {
             if let Ok(content) = std::fs::read(&path) {
                 files.push((path, content));
             }

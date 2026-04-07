@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::graph::edge::{Edge, Relation};
@@ -5,6 +6,7 @@ use crate::graph::node::{Node, NodeKind, Provenance, Source, Span, Timestamp};
 use crate::identity::{address_of, UorAddress};
 use crate::index::flow_cfg;
 use crate::index::flow_dfg;
+use crate::lang::LanguageSupport;
 
 /// Result of flow extraction: nodes and edges for CFG + DFG.
 pub struct FlowResult {
@@ -115,4 +117,73 @@ fn parse_file(source: &[u8]) -> Option<tree_sitter::Tree> {
         .set_language(&tree_sitter_rust::LANGUAGE.into())
         .ok()?;
     parser.parse(source, None)
+}
+
+/// Extract flow using language-specific backends per file group.
+pub fn extract_flow_multi(
+    file_groups: &HashMap<&str, Vec<(PathBuf, Vec<u8>)>>,
+    languages: &[Box<dyn LanguageSupport>],
+) -> FlowResult {
+    let lang_map: HashMap<&str, &dyn LanguageSupport> = languages
+        .iter()
+        .map(|l| (l.name(), l.as_ref()))
+        .collect();
+
+    let prov = Provenance {
+        source: Source::ToolOutput,
+        actor: "flow-extractor".into(),
+        timestamp: Timestamp(0),
+        justification: None,
+    };
+
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+
+    for (lang_name, files) in file_groups {
+        let Some(&backend) = lang_map.get(lang_name) else {
+            continue;
+        };
+        let mut parser = tree_sitter::Parser::new();
+        if parser.set_language(&backend.language()).is_err() {
+            continue;
+        }
+        for (path, source) in files {
+            let Some(tree) = parser.parse(source, None) else {
+                continue;
+            };
+            let cfg = backend.extract_control_flow(source, &tree);
+            let dfg = backend.extract_data_flow(source, &tree);
+
+            for cf in &cfg {
+                let (src, tgt) = stmt_node_pair(
+                    path, &cf.source_span, &cf.target_span,
+                    &prov, &mut nodes,
+                );
+                edges.push(Edge {
+                    source: src,
+                    target: tgt,
+                    relation: Relation::ControlFlow,
+                    confidence: 1.0,
+                    provenance: prov.clone(),
+                    evidence: vec![],
+                });
+            }
+            for df in &dfg {
+                let (src, tgt) = stmt_node_pair(
+                    path, &df.def_span, &df.use_span,
+                    &prov, &mut nodes,
+                );
+                edges.push(Edge {
+                    source: src,
+                    target: tgt,
+                    relation: Relation::DataFlow,
+                    confidence: 1.0,
+                    provenance: prov.clone(),
+                    evidence: vec![],
+                });
+            }
+        }
+    }
+
+    FlowResult { nodes, edges }
 }

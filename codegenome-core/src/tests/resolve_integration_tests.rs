@@ -43,7 +43,8 @@ fn end_to_end_index_resolve_traverse() {
 
     // Traverse from resolved address
     let query = Query::downstream(addr.unwrap(), 5);
-    let tr = traversal::execute(&query, &nodes, &edges);
+    let ctx = crate::graph::query_context::LocalQueryContext::new(&nodes, &edges);
+    let tr = traversal::execute(&query, &ctx);
     assert!(
         !tr.nodes.is_empty(),
         "Traversal should find reachable nodes"

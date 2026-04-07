@@ -29,6 +29,7 @@ pub fn build_workspace(
             .filter_map(|repo| repos.get(&repo.name).cloned())
             .collect(),
         federated_edges: edges,
+        symbol_edges: evidence::symbol_edges(cfg),
     };
     persist_workspace(&graph, store_dir)?;
     Ok(graph)

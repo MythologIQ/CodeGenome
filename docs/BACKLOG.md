@@ -24,7 +24,7 @@
 ### Phase 2: Symbol Resolution + Diff Mapping
 - [x] [B5] Heuristic symbol resolver (import/call/inherit edges from AST) (v0.5.0 - Complete: SemanticOverlay)
 - [x] [B6] Git diff-to-symbol mapper (v0.2.0 - Complete: detect_changes via span intersection)
-- [ ] [B7] Impact propagation (symbol → affected processes via graph traversal)
+- [x] [B7] Impact propagation (symbol → affected processes via graph traversal) (v0.19.0 - Complete: detect_changes blast radius)
 - [x] [B8] Confidence scoring and multi-resolver fusion (v0.11.0 - Complete: FusedOverlay with noisy-OR)
 
 ### Phase 3: Flow Overlays

@@ -17,7 +17,7 @@ pub struct Node {
 
 /// Byte range in source. Bridges tree-sitter positions to graph nodes.
 #[derive(
-    Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize,
+    Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize,
 )]
 pub struct Span {
     pub start_byte: u32,

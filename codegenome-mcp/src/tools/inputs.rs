@@ -80,6 +80,21 @@ pub struct ExperimentResultsInput {
 }
 
 #[derive(Deserialize, JsonSchema)]
+pub struct AssertInput {
+    /// The claim text (content-addressed for identity)
+    pub claim: String,
+    /// File path of the subject artifact
+    pub subject_file: String,
+    /// Line number of the subject artifact
+    pub subject_line: u32,
+    /// Confidence in the claim (0.0 to 1.0)
+    pub confidence: f64,
+    /// Actor name for provenance
+    #[serde(default = "default_actor")]
+    pub actor: String,
+}
+
+#[derive(Deserialize, JsonSchema)]
 pub struct WorkspaceTraceInput {
     /// Workspace root directory
     pub workspace_dir: String,

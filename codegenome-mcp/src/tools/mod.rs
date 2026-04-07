@@ -1,3 +1,4 @@
+pub mod assert_belief;
 pub mod context;
 pub mod detect;
 pub mod experiment_tool;

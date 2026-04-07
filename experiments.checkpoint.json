@@ -1,0 +1,15 @@
+{
+  "iteration": 140634,
+  "params": {
+    "confidence_threshold": 0.1904560894820332,
+    "attenuation_factor": 1.1201659698868023,
+    "max_depth": 17.878536163637087
+  },
+  "fitness_fn": "ImpactAccuracy",
+  "best_fitness": 0.8985667752442996,
+  "best_stability": 1.0,
+  "scale": 0.4,
+  "plateau_count": 2,
+  "widen_count": 2,
+  "last_chain_hash": "5ba3d5ece4a8fdcc"
+}

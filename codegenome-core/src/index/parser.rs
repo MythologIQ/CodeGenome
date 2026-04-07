@@ -1,8 +1,10 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use crate::graph::edge::{Edge, Relation};
 use crate::graph::node::{Node, NodeKind, Provenance, Source, Span, Timestamp};
 use crate::identity::{address_of, UorAddress};
+use crate::lang::LanguageSupport;
 
 /// A parsed source file: file-level node plus extracted symbols.
 /// Pure value — no handles, no state.
@@ -15,8 +17,7 @@ pub struct ParsedFile {
     pub edges: Vec<Edge>,
 }
 
-/// Parse multiple Rust source files. Creates one tree-sitter Parser
-/// and reuses it across all files for efficiency.
+/// Parse multiple Rust source files (backward-compatible wrapper).
 pub fn parse_files(files: &[(PathBuf, Vec<u8>)]) -> Vec<ParsedFile> {
     let mut parser = tree_sitter::Parser::new();
     parser
@@ -27,6 +28,33 @@ pub fn parse_files(files: &[(PathBuf, Vec<u8>)]) -> Vec<ParsedFile> {
         .iter()
         .map(|(path, source)| parse_one(&mut parser, path, source))
         .collect()
+}
+
+/// Parse files grouped by language. Each group uses the matching
+/// language backend's grammar.
+pub fn parse_files_multi(
+    file_groups: &HashMap<&str, Vec<(PathBuf, Vec<u8>)>>,
+    languages: &[Box<dyn LanguageSupport>],
+) -> Vec<ParsedFile> {
+    let lang_map: HashMap<&str, &dyn LanguageSupport> = languages
+        .iter()
+        .map(|l| (l.name(), l.as_ref()))
+        .collect();
+
+    let mut parsed = Vec::new();
+    for (lang_name, files) in file_groups {
+        let Some(&backend) = lang_map.get(lang_name) else {
+            continue;
+        };
+        let mut parser = tree_sitter::Parser::new();
+        if parser.set_language(&backend.language()).is_err() {
+            continue;
+        }
+        for (path, source) in files {
+            parsed.push(parse_one(&mut parser, path, source));
+        }
+    }
+    parsed
 }
 
 /// Parse a single file with an existing parser instance.

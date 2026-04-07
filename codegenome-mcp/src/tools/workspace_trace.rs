@@ -24,6 +24,7 @@ impl CodegenomeTools {
                 ],
                 aggregate_nodes: overlay.nodes.clone(),
                 federated_edges: overlay.edges.clone(),
+                symbol_edges: Vec::new(),
             },
             from_repo,
             to_repo,

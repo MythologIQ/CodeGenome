@@ -3,5 +3,7 @@ pub mod evidence;
 pub mod index;
 pub mod metrics;
 pub mod query;
+pub mod query_context;
 pub mod report;
+pub mod symbol_resolve;
 pub mod workspace;

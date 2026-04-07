@@ -47,6 +47,77 @@ pub fn identity_edges(
         .collect()
 }
 
+/// Extract (importer, exporter) dependency pairs from workspace config.
+pub fn dependency_pairs(cfg: &WorkspaceConfig) -> Vec<(String, String)> {
+    let by_pkg: HashMap<String, Vec<String>> = cfg
+        .repositories
+        .iter()
+        .filter_map(|repo| {
+            package_and_deps(&repo.source_dir)
+                .ok()
+        })
+        .collect();
+    cfg.repositories
+        .iter()
+        .flat_map(|repo| {
+            let source = repo.name.clone();
+            let deps = by_pkg.get(&source).cloned().unwrap_or_default();
+            deps.into_iter()
+                .filter(|dep| by_pkg.contains_key(dep))
+                .map(move |dep| (source.clone(), dep))
+        })
+        .collect()
+}
+
+/// Resolve symbol-level cross-repo edges using language backends.
+/// Only resolves across declared dependency boundaries.
+pub fn symbol_edges(cfg: &WorkspaceConfig) -> Vec<crate::graph::edge::Edge> {
+    let languages = crate::lang::all_languages();
+    let pairs = dependency_pairs(cfg);
+    let mut edges = Vec::new();
+
+    for (importer_name, exporter_name) in &pairs {
+        let Some(importer) = cfg.repositories.iter()
+            .find(|r| &r.name == importer_name) else { continue };
+        let Some(exporter) = cfg.repositories.iter()
+            .find(|r| &r.name == exporter_name) else { continue };
+
+        let importer_files = collect_files(&importer.source_dir);
+        let exporter_files = collect_files(&exporter.source_dir);
+
+        for lang in &languages {
+            let exports = crate::federation::symbol_resolve::build_export_table(
+                lang.as_ref(), &exporter_files,
+            );
+            let resolved = crate::federation::symbol_resolve::resolve_cross_repo(
+                lang.as_ref(), &importer_files, &exports,
+            );
+            edges.extend(resolved);
+        }
+    }
+    edges
+}
+
+fn collect_files(dir: &Path) -> Vec<(std::path::PathBuf, Vec<u8>)> {
+    let supported = crate::lang::detect::supported_extensions();
+    let mut files = Vec::new();
+    let Ok(entries) = std::fs::read_dir(dir) else { return files };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            files.extend(collect_files(&path));
+        } else if path.extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| supported.contains(&e))
+        {
+            if let Ok(content) = std::fs::read(&path) {
+                files.push((path, content));
+            }
+        }
+    }
+    files
+}
+
 fn package_and_deps(root: &Path) -> Result<(String, Vec<String>), String> {
     let path = root.join("Cargo.toml");
     let data = std::fs::read_to_string(path).map_err(|e| e.to_string())?;

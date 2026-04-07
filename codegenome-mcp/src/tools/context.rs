@@ -1,5 +1,6 @@
 use codegenome_core::graph::overlay::Overlay;
 use codegenome_core::graph::query::{Direction, Query};
+use codegenome_core::graph::query_context::LocalQueryContext;
 use codegenome_core::graph::traversal;
 
 use crate::tools::inputs::ContextInput;
@@ -27,11 +28,11 @@ impl CodegenomeTools {
             min_confidence: 0.0,
             relation_filter: None,
         };
-        let result = traversal::execute(
-            &query,
+        let ctx = LocalQueryContext::new(
             overlay.nodes(),
             overlay.edges(),
         );
+        let result = traversal::execute(&query, &ctx);
 
         let nodes: Vec<_> = result
             .nodes
