@@ -1,6 +1,8 @@
+mod canonical_tests;
 mod community_tests;
 mod confidence_fusion_tests;
 mod detect_changes_signal;
+mod evidence_entry_tests;
 mod evidence_tests;
 mod flow_tests;
 mod fusion_tests;
@@ -14,6 +16,7 @@ mod index_resolver_tests;
 mod invariants;
 mod lang_ir_tests;
 mod lang_python_tests;
+mod lineage_tests;
 mod lang_rust_tests;
 mod lang_typescript_tests;
 mod measurement_tests;

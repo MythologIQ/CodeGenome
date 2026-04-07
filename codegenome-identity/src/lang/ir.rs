@@ -1,4 +1,6 @@
 use crate::graph::node::Span;
+use crate::identity::UorAddress;
+use crate::lang::canonical::CanonicalKind;
 
 /// A symbol definition: function, class, struct, trait, enum, module.
 #[derive(Clone, Debug)]
@@ -8,6 +10,11 @@ pub struct SymbolDef {
     pub span: Span,
     /// Original AST node kind for provenance (e.g. "function_item").
     pub source_kind: String,
+    /// Language-neutral canonical kind for cross-language comparison.
+    pub canonical_kind: CanonicalKind,
+    /// Normalized address: same canonical kind + name → same address
+    /// regardless of source language. Observer frame, not identity.
+    pub normalized_address: UorAddress,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -65,6 +72,19 @@ pub struct DfEdge {
     pub def_span: Span,
     pub use_span: Span,
     pub var_name: String,
+}
+
+/// Construct a SymbolDef with canonical fields auto-populated.
+pub fn make_symbol(
+    name: String, kind: SymbolKind, span: Span, source_kind: String,
+) -> SymbolDef {
+    let ck = crate::lang::canonical::canonicalize(&kind, &source_kind);
+    let na = crate::lang::canonical::normalized_address(&ck, &name);
+    SymbolDef {
+        name, kind, span, source_kind,
+        canonical_kind: ck,
+        normalized_address: na,
+    }
 }
 
 /// Helper: convert a tree-sitter node to a Span.

@@ -37,4 +37,6 @@ pub enum Relation {
     AboutSubject,
     Supports,
     Contradicts,
+    // Lineage edges (child → parent mutation)
+    MutatedFrom,
 }

@@ -66,20 +66,18 @@ fn walk_py_symbols(
     match node.kind() {
         "function_definition" => {
             if let Some(name) = node_name(node, source) {
-                symbols.push(SymbolDef {
-                    name, kind: SymbolKind::Function,
-                    span: node_span(node),
-                    source_kind: "function_definition".into(),
-                });
+                symbols.push(make_symbol(
+                    name, SymbolKind::Function, node_span(node),
+                    "function_definition".into(),
+                ));
             }
         }
         "class_definition" => {
             if let Some(name) = node_name(node, source) {
-                symbols.push(SymbolDef {
-                    name, kind: SymbolKind::Class,
-                    span: node_span(node),
-                    source_kind: "class_definition".into(),
-                });
+                symbols.push(make_symbol(
+                    name, SymbolKind::Class, node_span(node),
+                    "class_definition".into(),
+                ));
             }
         }
         "decorated_definition" => {

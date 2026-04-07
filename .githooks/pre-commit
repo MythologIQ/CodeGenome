@@ -1,0 +1,22 @@
+#!/bin/bash
+# Pre-commit hook: scan staged files for secrets.
+# Install: git config core.hooksPath .githooks
+
+if command -v gitleaks &>/dev/null; then
+    gitleaks protect --staged --config .gitleaks.toml
+    if [ $? -ne 0 ]; then
+        echo "Secret detected in staged files. Commit blocked."
+        echo "Review flagged files and remove secrets before committing."
+        exit 1
+    fi
+else
+    # Fallback: regex scan for common secret patterns
+    PATTERNS='(AKIA[0-9A-Z]{16}|sk-[a-zA-Z0-9]{48}|ghp_[a-zA-Z0-9]{36}|-----BEGIN.*PRIVATE KEY)'
+    FILES=$(git diff --cached --name-only --diff-filter=ACM)
+    if [ -n "$FILES" ]; then
+        if echo "$FILES" | xargs grep -lE "$PATTERNS" 2>/dev/null; then
+            echo "Possible secret detected. Install gitleaks for better coverage."
+            exit 1
+        fi
+    fi
+fi

@@ -5,8 +5,8 @@
 ### Security Blockers
 - [x] [S1] Define cryptographic identity scheme: BLAKE3 vs SHA-256 vs dual-hash for UOR addresses (v0.1.0 - Complete: BLAKE3 selected)
 - [ ] [S2] Define capability broker integration points with FailSafe-Pro
-- [ ] [S3] Establish Merkle ledger entry format for code graph evidence
-- [ ] [S4] Secret scanning pre-commit hook + CI configuration
+- [x] [S3] Establish Merkle ledger entry format for code graph evidence (v0.21.0 - Complete: evidence/entry.rs TypedEvidenceEntry)
+- [x] [S4] Secret scanning pre-commit hook + CI configuration (v0.21.0 - Complete: .githooks/pre-commit + .gitleaks.toml)
 
 ### Development Blockers
 - [x] [D1] Workspace Cargo.toml with core crate configured (v0.1.0 - Complete: Phase 1 scope)

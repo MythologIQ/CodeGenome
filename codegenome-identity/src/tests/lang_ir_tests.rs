@@ -3,7 +3,7 @@ use crate::graph::node::{NodeKind, Span};
 use crate::lang::graph_builder::build_file_graph;
 use crate::lang::ir::*;
 
-fn span(line: u32, start: u32, end: u32) -> Span {
+fn sp(line: u32, start: u32, end: u32) -> Span {
     Span {
         start_byte: start,
         end_byte: end,
@@ -16,31 +16,21 @@ fn span(line: u32, start: u32, end: u32) -> Span {
 fn graph_builder_produces_nodes_and_contains_edges() {
     let source = b"fn alpha() {}\nfn beta() {}\n";
     let symbols = vec![
-        SymbolDef {
-            name: "alpha".into(),
-            kind: SymbolKind::Function,
-            span: span(1, 0, 13),
-            source_kind: "function_item".into(),
-        },
-        SymbolDef {
-            name: "beta".into(),
-            kind: SymbolKind::Function,
-            span: span(2, 14, 26),
-            source_kind: "function_item".into(),
-        },
+        make_symbol(
+            "alpha".into(), SymbolKind::Function,
+            sp(1, 0, 13), "function_item".into(),
+        ),
+        make_symbol(
+            "beta".into(), SymbolKind::Function,
+            sp(2, 14, 26), "function_item".into(),
+        ),
     ];
 
     let (nodes, edges) = build_file_graph(
         std::path::Path::new("test.rs"),
-        source,
-        "rust",
-        &symbols,
-        &[],
-        &[],
-        &[],
+        source, "rust", &symbols, &[], &[], &[],
     );
 
-    // 1 File node + 2 Symbol nodes
     assert_eq!(nodes.len(), 3);
     let file_nodes: Vec<_> = nodes
         .iter()
@@ -48,7 +38,6 @@ fn graph_builder_produces_nodes_and_contains_edges() {
         .collect();
     assert_eq!(file_nodes.len(), 1);
 
-    // 2 Contains edges
     let contains: Vec<_> = edges
         .iter()
         .filter(|e| e.relation == Relation::Contains)
@@ -60,33 +49,24 @@ fn graph_builder_produces_nodes_and_contains_edges() {
 fn graph_builder_produces_calls_edge() {
     let source = b"fn caller() { callee(); }\nfn callee() {}";
     let symbols = vec![
-        SymbolDef {
-            name: "caller".into(),
-            kind: SymbolKind::Function,
-            span: span(1, 0, 25),
-            source_kind: "function_item".into(),
-        },
-        SymbolDef {
-            name: "callee".into(),
-            kind: SymbolKind::Function,
-            span: span(2, 26, 40),
-            source_kind: "function_item".into(),
-        },
+        make_symbol(
+            "caller".into(), SymbolKind::Function,
+            sp(1, 0, 25), "function_item".into(),
+        ),
+        make_symbol(
+            "callee".into(), SymbolKind::Function,
+            sp(2, 26, 40), "function_item".into(),
+        ),
     ];
     let calls = vec![CallRef {
-        caller_span: span(1, 0, 25),
+        caller_span: sp(1, 0, 25),
         callee_name: "callee".into(),
-        span: span(1, 14, 23),
+        span: sp(1, 14, 23),
     }];
 
     let (_, edges) = build_file_graph(
         std::path::Path::new("test.rs"),
-        source,
-        "rust",
-        &symbols,
-        &[],
-        &calls,
-        &[],
+        source, "rust", &symbols, &[], &calls, &[],
     );
 
     let call_edges: Vec<_> = edges

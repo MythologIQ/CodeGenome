@@ -1,0 +1,9 @@
+title = "CODEGENOME gitleaks config"
+
+[allowlist]
+paths = [
+    "docs/META_LEDGER.md",
+    "experiments.tsv",
+    ".agent/staging/",
+    "data/runs/",
+]

@@ -1,3 +1,4 @@
+pub mod canonical;
 pub mod detect;
 pub mod graph_builder;
 pub mod ir;

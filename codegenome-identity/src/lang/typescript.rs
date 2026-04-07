@@ -93,11 +93,10 @@ fn walk_for_symbols(
             "enum_declaration" => SymbolKind::Enum,
             _ => SymbolKind::Other(node.kind().into()),
         };
-        symbols.push(SymbolDef {
-            name, kind,
-            span: node_span(node),
-            source_kind: node.kind().to_string(),
-        });
+        symbols.push(make_symbol(
+            name, kind, node_span(node),
+            node.kind().to_string(),
+        ));
     }
     let mut c = node.walk();
     for child in node.children(&mut c) {

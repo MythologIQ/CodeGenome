@@ -78,12 +78,10 @@ fn extract_rust_symbols(
             "mod_item" => SymbolKind::Module,
             other => SymbolKind::Other(other.into()),
         };
-        symbols.push(SymbolDef {
-            name,
-            kind,
-            span: node_span(&child),
-            source_kind: child.kind().to_string(),
-        });
+        symbols.push(make_symbol(
+            name, kind, node_span(&child),
+            child.kind().to_string(),
+        ));
     }
     symbols
 }

@@ -3074,3 +3074,86 @@ SHA256(all_source_files) = 1828d1533bfca314c6286d96c38f78c6f86d10af1be7fad4aafc8
 SHA256(source_seal + previous_chain) = 4c26b9566584ea44751d216277d638f714eb089f12ce0848899c432417a1d31c
 
 **Verdict**: SUBSTANTIATED. Reality = Promise. Session sealed.
+
+---
+
+### Entry #116: GATE TRIBUNAL — Housekeeping + Identity Plan
+
+**Timestamp**: 2026-04-08T02:00:00Z
+**Actor**: The QoreLogic Judge
+**Operation**: GATE
+**Target**: plan-housekeeping-and-identity.md
+**Risk Grade**: L3
+
+**Audit Passes**: Security (CLEAR), Ghost UI (CLEAR), Simplicity Razor (CLEAR), Dependency (CLEAR), Macro-Level Architecture (CLEAR), Build Path (CLEAR)
+
+**Content Hash**:
+SHA256(all_artifacts) = c22ace66e476709faa8687a6ffd0be535574fc468a5b60e328fe3a5f7467b48a
+
+**Previous Hash**: 4c26b9566584ea44751d216277d638f714eb089f12ce0848899c432417a1d31c
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = 69c63597d2fb31f9a245f8b3cde36aabf3a3bf78ea5b45dbcdef52c2147baf9c
+
+**Decision**: PASS. Five-phase plan approved: S4 secret scanning, S3 evidence entry format, directory rename + re-export cleanup, cross-language normalization (observer frame), evolutionary lineage graph (MutatedFrom edges). Zero new Rust dependencies. All new modules in codegenome-identity.
+
+---
+
+### Entry #117: IMPLEMENTATION — Housekeeping + Identity Features (Phases 1-5)
+
+**Timestamp**: 2026-04-08T03:00:00Z
+**Actor**: The QoreLogic Specialist
+**Operation**: IMPLEMENT
+**Target**: plan-housekeeping-and-identity.md — All 5 Phases
+
+**Phase 1 — Secret Scanning**: `.githooks/pre-commit` + `.gitleaks.toml`
+**Phase 2 — Evidence Format**: `evidence/entry.rs` with TypedEvidenceEntry + TypedOperation
+**Phase 3 — Directory Rename**: `codegenome-core/` → `codegenome-substrate/` (directory + Cargo paths)
+**Phase 4 — Normalization**: `lang/canonical.rs` (CanonicalKind + normalized_address), SymbolDef extended, 3 backends updated
+**Phase 5 — Lineage**: `lineage/record.rs` (MutationRecord → Edge), `lineage/query.rs` (ancestors/descendants/lineage_chain), Relation::MutatedFrom
+
+**Blockers Resolved**: S3, S4
+**Tests Added**: 13 (241 → 254 total)
+**Tests Passing**: 254/254 (zero regressions)
+**Edge Types**: 15 → 16 (MutatedFrom)
+
+**Content Hash**:
+SHA256(all_source) = 77f1ce230e7c3e9d1ba8d334e0ec46a500828bf78f2e5a94490ff012103dbd3a
+
+**Previous Hash**: 69c63597d2fb31f9a245f8b3cde36aabf3a3bf78ea5b45dbcdef52c2147baf9c
+
+**Chain Hash**:
+SHA256(content_hash + previous_hash) = 5fe16241a04bc9fe5e011ebfe24bb0e8a35bfb24081aa875224b59fcc9486edf
+
+**Decision**: All five phases complete. Secret scanning active. Evidence entries typed and serializable. Directory matches package name. Cross-language normalization as observer frame (canonical identity unchanged). Evolutionary lineage enables ancestor/descendant queries via MutatedFrom edges.
+
+---
+
+### Entry #118: SESSION SEAL — Session 5
+
+**Timestamp**: 2026-04-08T03:30:00Z
+**Actor**: The QoreLogic Judge
+**Operation**: SUBSTANTIATE
+**Session**: 5
+
+**Session 5 Deliverables**:
+1. Secret scanning pre-commit hook (S4)
+2. Typed evidence entry format (S3)
+3. Directory rename: codegenome-core/ → codegenome-substrate/
+4. Cross-language normalization: CanonicalKind + normalized_address (observer frame)
+5. Evolutionary lineage: MutationRecord + MutatedFrom + ancestor/descendant queries
+
+**Governance**: Entries #116–#118 (3 entries), 1 plan, 1 audit (PASS), 1 implementation
+**Tests**: 241 → 254 (+13)
+**Blockers Resolved**: S3, S4
+**Edge Types**: 15 → 16 (MutatedFrom)
+
+**Source Seal**:
+SHA256(all_source_files) = 77f1ce230e7c3e9d1ba8d334e0ec46a500828bf78f2e5a94490ff012103dbd3a
+
+**Previous Chain Hash**: 5fe16241a04bc9fe5e011ebfe24bb0e8a35bfb24081aa875224b59fcc9486edf
+
+**Session Seal**:
+SHA256(source_seal + previous_chain) = 8fa8e2ceed44fcb85da86caf9c89a47acdd8ff0528dcf0493eeadcaa25a65293
+
+**Verdict**: SUBSTANTIATED. Reality = Promise. Session sealed.
